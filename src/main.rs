@@ -33,9 +33,12 @@ fn main() {
     enable_raw_mode().unwrap();
 
     let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(0..8)].to_vec();
+    let mut block_speed = 12;
 
     event_gameloop!(
         |event: Option<Event>| {
+            block_speed = 12;
+
             let collision =
                 CollisionContainer::from(vec![&game_boundaries as _, &stationary_blocks as _]);
 
@@ -53,7 +56,7 @@ fn main() {
                 match key_event {
                     KeyEvent {
                         code: KeyCode::Left,
-                        modifiers: KeyModifiers::NONE,
+                        modifiers: _,
                         kind: _,
                         state: _,
                     } => {
@@ -61,7 +64,7 @@ fn main() {
                     }
                     KeyEvent {
                         code: KeyCode::Right,
-                        modifiers: KeyModifiers::NONE,
+                        modifiers: _,
                         kind: _,
                         state: _,
                     } => {
@@ -69,11 +72,23 @@ fn main() {
                     }
                     KeyEvent {
                         code: KeyCode::Up,
-                        modifiers: KeyModifiers::NONE,
+                        modifiers: _,
                         kind: _,
                         state: _,
                     } => {
-                        block.rotate(1.0); // add collision checking
+                        let mut hypothetical_block = block.clone();
+                        hypothetical_block.rotate();
+                        if !collision.overlaps_element(&hypothetical_block) {
+                            block.rotate();
+                        }
+                    }
+                    KeyEvent {
+                        code: KeyCode::Down,
+                        modifiers: _,
+                        kind: _,
+                        state: _,
+                    } => {
+                        block_speed = 2;
                     }
                     KeyEvent {
                         code: KeyCode::Char('c'),
@@ -86,7 +101,7 @@ fn main() {
             }
 
             i += 1;
-            active_block = if i % 12 == 0 {
+            active_block = if i % block_speed == 0 {
                 if try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
                     Some(block)
                 } else {

@@ -146,8 +146,8 @@ impl Block {
         }
     }
 
-    pub fn rotate(&mut self, times: f32) {
-        self.rotation += 90.0 * times
+    pub fn rotate(&mut self) {
+        self.rotation += 90.0
     }
 }
 
