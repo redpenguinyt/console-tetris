@@ -169,7 +169,7 @@ impl ViewElement for Block {
                     (pf.0 * cr - pf.1 * sr + ox).round() as isize,
                     (pf.1 * cr + pf.0 * sr + oy).round() as isize,
                 );
-                
+
                 // Position block
                 let mut positioned = rotated + self.pos;
 

@@ -67,17 +67,20 @@ macro_rules! event_gameloop {
 pub fn generate_borders() -> PixelContainer {
     let mut borders = PixelContainer::new();
     borders.blit(&Rect::new(
+        // Left wall
         Vec2D::new(0, 0),
-        Vec2D::new(1, 21),
+        Vec2D::new(2, 21),
         ColChar::SOLID,
     ));
     borders.blit(&Rect::new(
-        Vec2D::new(21, 0),
-        Vec2D::new(1, 21),
+        // Right wall
+        Vec2D::new(22, 0),
+        Vec2D::new(2, 21),
         ColChar::SOLID,
     ));
     borders.blit(&Rect::new(
-        Vec2D::new(1, 20),
+        // Floor
+        Vec2D::new(2, 20),
         Vec2D::new(20, 1),
         ColChar::SOLID,
     ));

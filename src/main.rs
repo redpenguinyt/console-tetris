@@ -7,9 +7,9 @@ use gemini_engine::elements::{
     view::{ColChar, Wrapping},
     PixelContainer, Vec2D, View,
 };
+use rand::Rng;
 use tetris::blocks::{Block as TetrisBlock, BlockType};
 use tetris::event_gameloop;
-use rand::Rng;
 
 const FPS: f32 = 30.0;
 
@@ -23,7 +23,6 @@ fn try_move_block(collision: &CollisionContainer, block: &mut TetrisBlock, offse
 }
 
 fn main() {
-
     let mut view = View::new(30, 21, ColChar::EMPTY);
     let game_boundaries = tetris::generate_borders();
     let mut stationary_blocks = PixelContainer::new();
@@ -53,11 +52,29 @@ fn main() {
             if let Some(Event::Key(key_event)) = event {
                 match key_event {
                     KeyEvent {
+                        code: KeyCode::Left,
+                        modifiers: KeyModifiers::NONE,
+                        kind: _,
+                        state: _,
+                    } => {
+                        try_move_block(&collision, &mut block, Vec2D::new(-1, 0));
+                    }
+                    KeyEvent {
+                        code: KeyCode::Right,
+                        modifiers: KeyModifiers::NONE,
+                        kind: _,
+                        state: _,
+                    } => {
+                        try_move_block(&collision, &mut block, Vec2D::new(1, 0));
+                    }
+                    KeyEvent {
                         code: KeyCode::Up,
                         modifiers: KeyModifiers::NONE,
                         kind: _,
                         state: _,
-                    } => panic!("wires"),
+                    } => {
+                        block.rotate(1.0); // add collision checking
+                    }
                     KeyEvent {
                         code: KeyCode::Char('c'),
                         modifiers: KeyModifiers::CONTROL,
@@ -94,8 +111,6 @@ fn main() {
             }
 
             view.display_render().unwrap();
-            println!("{:?}\r", bag);
-            println!("{:?}\r", active_block)
         },
         FPS
     );
