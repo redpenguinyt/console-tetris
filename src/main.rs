@@ -36,8 +36,8 @@ fn main() {
                 }
                 active_block = None;
             } else {
-                block.pos += offset;
                 block.rot_c();
+                block.pos += offset;
                 active_block = Some(block);
             }
         },
