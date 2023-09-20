@@ -21,6 +21,7 @@ fn main() {
     let mut stationary_blocks = PixelContainer::new();
 
     let mut held_piece = None;
+    let mut has_held = false;
 
     let mut active_block: Option<TetrisBlock> = None;
     let mut ghost_block: TetrisBlock = TetrisBlock::DEFAULT;
@@ -30,6 +31,9 @@ fn main() {
 
     let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(0..8)].to_vec();
     let mut block_speed = 12;
+
+    let level = 1;
+    let mut score = 0;
 
     event_gameloop!(
         |event: Option<Event>| {
@@ -92,6 +96,7 @@ fn main() {
                         kind: _,
                         state: _,
                     } => {
+                        score += ghost_block.pos.y - block.pos.y;
                         block = ghost_block.clone();
                         i = block_speed - 1
                     }
@@ -101,14 +106,17 @@ fn main() {
                         kind: _,
                         state: _,
                     } => {
-                        let current_held_piece = held_piece;
-                        held_piece = Some(block.block_shape);
-                        match current_held_piece {
-                            Some(piece) => block = TetrisBlock::new(piece),
-                            None => {
-                                active_block = None;
-                                return false;
+                        if !has_held {
+                            let current_held_piece = held_piece;
+                            held_piece = Some(block.block_shape);
+                            match current_held_piece {
+                                Some(piece) => block = TetrisBlock::new(piece),
+                                None => {
+                                    active_block = None;
+                                    return false;
+                                }
                             }
+                            has_held = true;
                         }
                     }
                     KeyEvent {
@@ -124,13 +132,20 @@ fn main() {
             i += 1;
             active_block = if i % block_speed == 0 {
                 if tetris::try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
+                    if block_speed == 2 {
+                        score += 1;
+                    }
                     Some(block)
                 } else {
+                    has_held = false;
                     stationary_blocks.blit(&block);
                     if block.pos.y < 1 {
                         return true;
                     }
-                    tetris::clear_filled_lines(&mut stationary_blocks);
+                    let cleared_lines = tetris::clear_filled_lines(&mut stationary_blocks);
+                    if cleared_lines > 0 {
+                        score += (cleared_lines * 2 - 1) * 100 * level;
+                    }
                     None
                 }
             } else {
@@ -158,6 +173,14 @@ fn main() {
                 held_block_display.pos = Vec2D::new(15, 4);
                 view.blit(&held_block_display, Wrapping::Panic);
             }
+
+            // Score display
+            let mut score_display = String::from("Score: ");
+            score_display.push_str(&score.to_string());
+            view.blit(
+                &Text::new(Vec2D::new(27, 6), &score_display, Modifier::None),
+                Wrapping::Panic,
+            );
 
             view.display_render().unwrap();
         },

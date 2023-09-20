@@ -109,11 +109,13 @@ pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Bl
     ghost_block
 }
 
-pub fn clear_filled_lines(blocks: &mut PixelContainer) {
+pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
     let mut pixels = blocks.pixels.clone();
     if pixels.is_empty() {
-        return;
+        return 0;
     }
+
+    let mut cleared_lines = 0;
 
     let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
     let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
@@ -125,12 +127,13 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) {
             .map(|p| p.pos.x)
             .collect();
 
-        for x in 2..20 {
+        for x in 2..22 {
             if !row_pixels.contains(&x) {
                 continue 'row;
             }
         }
 
+        cleared_lines += 1;
         pixels = pixels.into_iter().filter(|p| p.pos.y != y).collect();
     }
 
@@ -170,4 +173,6 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) {
     }
 
     blocks.pixels = pixels;
+
+    cleared_lines
 }
