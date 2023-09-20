@@ -1,5 +1,5 @@
 use gemini_engine::elements::view::{utils, ColChar, Colour, Point, Vec2D, ViewElement};
-use rand::{seq::SliceRandom, Rng};
+use rand::seq::SliceRandom;
 
 struct BlockData {
     points: Vec<Vec2D>,
@@ -65,7 +65,7 @@ impl From<BlockType> for BlockData {
                     Vec2D::new(0, -1),
                     Vec2D::new(1, 0),
                 ],
-                Colour::rgb(0, 255, 0),
+                Colour::rgb(255, 0, 0),
                 (0.0, 0.0),
             ),
             BlockType::L => BlockData::new(
@@ -85,11 +85,9 @@ impl From<BlockType> for BlockData {
                     Vec2D::new(-1, -1),
                     Vec2D::new(1, 0),
                 ],
-                Colour::rgb(255, 165, 0),
+                Colour::rgb(0, 0, 255),
                 (0.0, 0.0),
             ),
-
-            _ => unimplemented!(),
         }
     }
 }
@@ -115,10 +113,6 @@ impl BlockType {
         BlockType::T,
         BlockType::Z,
     ];
-    fn random() -> BlockType {
-        let mut rng = rand::thread_rng();
-        *BlockType::ALL_VARIANTS.choose(&mut rng).unwrap()
-    }
     pub fn bag() -> [BlockType; 7] {
         let mut variants = BlockType::ALL_VARIANTS;
         variants.shuffle(&mut rand::thread_rng());
@@ -144,19 +138,16 @@ pub struct Block {
 }
 
 impl Block {
-    pub fn new() -> Block {
+    pub fn new(block_shape: BlockType) -> Block {
         Block {
             pos: Vec2D::new(5, 0),
-            block_shape: BlockType::random(),
+            block_shape,
             rotation: 0.0,
         }
     }
 
-    pub fn rot_c(&mut self) {
-        self.rotation += 90.0
-    }
-    pub fn rot_ac(&mut self) {
-        self.rotation -= 90.0
+    pub fn rotate(&mut self, times: f32) {
+        self.rotation += 90.0 * times
     }
 }
 
@@ -172,12 +163,17 @@ impl ViewElement for Block {
         let block_points = block_points
             .iter()
             .flat_map(|p| {
+                // Rotate block
                 let pf = (p.x as f32 - ox, p.y as f32 - oy);
                 let rotated = Vec2D::new(
                     (pf.0 * cr - pf.1 * sr + ox).round() as isize,
                     (pf.1 * cr + pf.0 * sr + oy).round() as isize,
                 );
+                
+                // Position block
                 let mut positioned = rotated + self.pos;
+
+                // Widen block so that each pixels appears square
                 positioned.x *= 2;
                 vec![positioned, positioned + Vec2D::new(1, 0)]
             })
