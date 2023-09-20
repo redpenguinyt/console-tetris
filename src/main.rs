@@ -6,8 +6,8 @@ use crossterm::{
 };
 use gemini_engine::elements::{
     containers::CollisionContainer,
-    view::{ColChar, Wrapping},
-    PixelContainer, Vec2D, View,
+    view::{ColChar, Modifier, Wrapping},
+    PixelContainer, Text, Vec2D, View,
 };
 use rand::Rng;
 use tetris::blocks::{Block as TetrisBlock, BlockType};
@@ -19,6 +19,8 @@ fn main() {
     let mut view = View::new(50, 21, ColChar::EMPTY);
     let game_boundaries = tetris::generate_borders();
     let mut stationary_blocks = PixelContainer::new();
+
+    let mut held_piece = None;
 
     let mut active_block: Option<TetrisBlock> = None;
     let mut ghost_block: TetrisBlock = TetrisBlock::DEFAULT;
@@ -93,6 +95,21 @@ fn main() {
                         block = ghost_block.clone();
                         i = block_speed - 1
                     }
+                    KeyEvent {
+                        code: KeyCode::Char('c'), // Hold
+                        modifiers: KeyModifiers::NONE,
+                        kind: _,
+                        state: _,
+                    } => {
+                        let current_held_piece = held_piece;
+                        held_piece = Some(block.block_shape);
+                        match current_held_piece {
+                            Some(piece) => block = TetrisBlock::new(piece),
+                            None => {
+                                active_block = None;
+                                return false;
+                            }
+                        }
                     }
                     KeyEvent {
                         code: KeyCode::Char('c'), // Close
@@ -129,6 +146,17 @@ fn main() {
             view.blit(&ghost_block, Wrapping::Panic);
             if let Some(ref block) = active_block {
                 view.blit(block, Wrapping::Ignore);
+            }
+
+            // Held piece display
+            if let Some(piece) = held_piece {
+                view.blit(
+                    &Text::new(Vec2D::new(27, 2), "Held piece:", Modifier::None),
+                    Wrapping::Panic,
+                );
+                let mut held_block_display = TetrisBlock::new(piece);
+                held_block_display.pos = Vec2D::new(15, 4);
+                view.blit(&held_block_display, Wrapping::Panic);
             }
 
             view.display_render().unwrap();
