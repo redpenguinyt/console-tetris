@@ -1,5 +1,8 @@
 use crossterm::event::{poll, read, Event};
-use gemini_engine::elements::{view::ColChar, PixelContainer, Rect, Vec2D};
+use gemini_engine::elements::{
+    view::ColChar,
+    PixelContainer, Rect, Vec2D,
+};
 use std::{
     thread,
     time::{Duration, Instant},
@@ -86,4 +89,32 @@ pub fn generate_borders() -> PixelContainer {
     ));
 
     borders
+}
+
+pub fn clear_filled_lines(blocks: &mut PixelContainer) {
+    let mut pixels = blocks.pixels.clone();
+    if pixels.is_empty() {
+        return;
+    }
+
+    let min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
+    let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
+
+    'row: for y in min_y..=max_y {
+        let row_pixels: Vec<isize> = pixels
+            .iter()
+            .filter(|p| p.pos.y == y)
+            .map(|p| p.pos.x)
+            .collect();
+
+        for x in 2..20 {
+            if !row_pixels.contains(&x) {
+                continue 'row;
+            }
+        }
+
+        pixels = pixels.into_iter().filter(|p| p.pos.y != y).collect();
+    }
+
+    blocks.pixels = pixels;
 }

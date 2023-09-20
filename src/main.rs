@@ -109,6 +109,7 @@ fn main() {
                     if block.pos.y < 1 {
                         return true;
                     }
+                    tetris::clear_filled_lines(&mut stationary_blocks);
                     None
                 }
             } else {
@@ -126,6 +127,11 @@ fn main() {
             }
 
             view.display_render().unwrap();
+            println!("{:?}\r", stationary_blocks.pixels
+            .iter()
+            .filter(|p| p.pos.y == 19)
+            .map(|p| p.pos.x)
+            .collect::<Vec<isize>>());
         },
         FPS
     );
