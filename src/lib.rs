@@ -1,5 +1,8 @@
+use blocks::Block;
 use crossterm::event::{poll, read, Event};
-use gemini_engine::elements::{view::ColChar, PixelContainer, Rect, Vec2D};
+use gemini_engine::elements::{
+    containers::CollisionContainer, view::ColChar, PixelContainer, Rect, Vec2D,
+};
 use std::{
     thread,
     time::{Duration, Instant},
@@ -86,6 +89,24 @@ pub fn generate_borders() -> PixelContainer {
     ));
 
     borders
+}
+
+pub fn try_move_block(collision: &CollisionContainer, block: &mut Block, offset: Vec2D) -> bool {
+    let did_move = !collision.will_overlap_element(block, offset);
+    if did_move {
+        block.pos += offset
+    }
+
+    did_move
+}
+
+pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Block {
+    let mut ghost_block = block.clone();
+    ghost_block.is_ghost = true;
+
+    while try_move_block(&collision, &mut ghost_block, Vec2D::new(0, 1)) {}
+
+    ghost_block
 }
 
 pub fn clear_filled_lines(blocks: &mut PixelContainer) {

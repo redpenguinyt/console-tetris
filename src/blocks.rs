@@ -38,19 +38,23 @@ impl BlockType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Block {
     pub pos: Vec2D,
-    block_shape: BlockType,
+    pub block_shape: BlockType,
     rotation: usize,
+    pub(super) is_ghost: bool,
 }
 
 impl Block {
-    pub fn new(block_shape: BlockType) -> Block {
+    pub const DEFAULT: Block = Block::new(BlockType::O);
+
+    pub const fn new(block_shape: BlockType) -> Block {
         Block {
             pos: Vec2D::new(5, 0),
             block_shape,
             rotation: 0,
+            is_ghost: false,
         }
     }
 
@@ -59,10 +63,24 @@ impl Block {
     }
 }
 
+impl Clone for Block {
+    fn clone(&self) -> Self {
+        Self {
+            pos: self.pos,
+            block_shape: self.block_shape,
+            rotation: self.rotation,
+            is_ghost: false,
+        }
+    }
+}
+
 impl ViewElement for Block {
     fn active_pixels(&self) -> Vec<Point> {
         let rotation_states = self.block_shape.get_rotation_states();
-        let block_colour = self.block_shape.get_colour();
+        let block_colour = match self.is_ghost {
+            true => ColChar::SOLID.with_rgb(100, 100, 100),
+            false => self.block_shape.get_colour(),
+        };
 
         let block_points = rotation_states[self.rotation % rotation_states.len()]
             .iter()

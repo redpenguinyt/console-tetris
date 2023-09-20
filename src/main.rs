@@ -1,3 +1,5 @@
+use std::process;
+
 use crossterm::{
     event::{Event, KeyCode, KeyEvent, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode},
@@ -13,21 +15,13 @@ use tetris::event_gameloop;
 
 const FPS: f32 = 30.0;
 
-fn try_move_block(collision: &CollisionContainer, block: &mut TetrisBlock, offset: Vec2D) -> bool {
-    let did_move = !collision.will_overlap_element(block, offset);
-    if did_move {
-        block.pos += offset
-    }
-
-    did_move
-}
-
 fn main() {
-    let mut view = View::new(30, 21, ColChar::EMPTY);
+    let mut view = View::new(50, 21, ColChar::EMPTY);
     let game_boundaries = tetris::generate_borders();
     let mut stationary_blocks = PixelContainer::new();
 
     let mut active_block: Option<TetrisBlock> = None;
+    let mut ghost_block: TetrisBlock = TetrisBlock::DEFAULT;
     let mut i = 0;
 
     enable_raw_mode().unwrap();
@@ -52,26 +46,28 @@ fn main() {
                 }
             };
 
+            ghost_block = tetris::generate_ghost_block(&collision, &block);
+
             if let Some(Event::Key(key_event)) = event {
                 match key_event {
                     KeyEvent {
-                        code: KeyCode::Left,
+                        code: KeyCode::Left, // Shift left
                         modifiers: _,
                         kind: _,
                         state: _,
                     } => {
-                        try_move_block(&collision, &mut block, Vec2D::new(-1, 0));
+                        tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0));
                     }
                     KeyEvent {
-                        code: KeyCode::Right,
+                        code: KeyCode::Right, // Shift right
                         modifiers: _,
                         kind: _,
                         state: _,
                     } => {
-                        try_move_block(&collision, &mut block, Vec2D::new(1, 0));
+                        tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0));
                     }
                     KeyEvent {
-                        code: KeyCode::Up,
+                        code: KeyCode::Up, // Rotate
                         modifiers: _,
                         kind: _,
                         state: _,
@@ -83,26 +79,34 @@ fn main() {
                         }
                     }
                     KeyEvent {
-                        code: KeyCode::Down,
+                        code: KeyCode::Down, // Soft Drop
+                        modifiers: _,
+                        kind: _,
+                        state: _,
+                    } => block_speed = 2,
+                    KeyEvent {
+                        code: KeyCode::Char(' '), // Hard drop
                         modifiers: _,
                         kind: _,
                         state: _,
                     } => {
-                        block_speed = 2;
+                        block = ghost_block.clone();
+                        i = block_speed - 1
+                    }
                     }
                     KeyEvent {
-                        code: KeyCode::Char('c'),
+                        code: KeyCode::Char('c'), // Close
                         modifiers: KeyModifiers::CONTROL,
                         kind: _,
                         state: _,
-                    } => return true,
+                    } => process::exit(0),
                     _ => (),
                 }
             }
 
             i += 1;
             active_block = if i % block_speed == 0 {
-                if try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
+                if tetris::try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
                     Some(block)
                 } else {
                     stationary_blocks.blit(&block);
@@ -122,6 +126,7 @@ fn main() {
             view.clear();
             view.blit(&game_boundaries, Wrapping::Panic);
             view.blit(&stationary_blocks, Wrapping::Panic);
+            view.blit(&ghost_block, Wrapping::Panic);
             if let Some(ref block) = active_block {
                 view.blit(block, Wrapping::Ignore);
             }
