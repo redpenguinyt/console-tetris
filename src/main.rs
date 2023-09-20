@@ -9,7 +9,7 @@ use gemini_engine::{
 mod blocks;
 use blocks::Block as TetrisBlock;
 
-const FPS: f32 = 15.0;
+const FPS: f32 = 5.0;
 
 fn main() {
     let mut view = View::new(30, 21, ColChar::EMPTY);
@@ -37,7 +37,8 @@ fn main() {
                 active_block = None;
             } else {
                 block.rot_c();
-                block.pos += offset;
+                block.pos.y = 10;
+                // block.pos += offset;
                 active_block = Some(block);
             }
         },
