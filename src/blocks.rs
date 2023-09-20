@@ -2,16 +2,14 @@ use gemini_engine::elements::view::{utils, ColChar, Colour, Point, Vec2D, ViewEl
 use rand::seq::SliceRandom;
 
 struct BlockData {
-    points: Vec<Vec2D>,
+    rotation_states: Vec<Vec<Vec2D>>,
     colour: Colour,
-    rotation_origin: (f32, f32),
 }
 impl BlockData {
-    fn new(points: Vec<Vec2D>, colour: Colour, rotation_origin: (f32, f32)) -> BlockData {
+    fn new(rotation_states: Vec<Vec<Vec2D>>, colour: Colour) -> BlockData {
         BlockData {
-            points,
+            rotation_states,
             colour,
-            rotation_origin,
         }
     }
 }
@@ -19,74 +17,37 @@ impl From<BlockType> for BlockData {
     fn from(value: BlockType) -> Self {
         match value {
             BlockType::O => BlockData::new(
-                vec![
+                vec![vec![
                     Vec2D::new(0, 0),
                     Vec2D::new(1, 0),
                     Vec2D::new(0, 1),
                     Vec2D::new(1, 1),
-                ],
+                ]],
                 Colour::rgb(255, 255, 0),
-                (0.5, 0.5),
             ),
             BlockType::I => BlockData::new(
-                vec![
-                    Vec2D::new(-1, 1),
-                    Vec2D::new(0, 1),
-                    Vec2D::new(1, 1),
-                    Vec2D::new(2, 1),
-                ],
+                vec![],
                 Colour::rgb(0, 255, 255),
-                (0.5, 0.5),
             ),
             BlockType::T => BlockData::new(
-                vec![
-                    Vec2D::new(0, 0),
-                    Vec2D::new(0, -1),
-                    Vec2D::new(-1, 0),
-                    Vec2D::new(1, 0),
-                ],
+                vec![],
                 Colour::rgb(255, 0, 255),
-                (0.0, 0.0),
             ),
             BlockType::S => BlockData::new(
-                vec![
-                    Vec2D::new(0, 0),
-                    Vec2D::new(-1, 0),
-                    Vec2D::new(0, -1),
-                    Vec2D::new(1, -1),
-                ],
+                vec![],
                 Colour::rgb(0, 255, 0),
-                (0.0, 0.0),
             ),
             BlockType::Z => BlockData::new(
-                vec![
-                    Vec2D::new(0, 0),
-                    Vec2D::new(-1, -1),
-                    Vec2D::new(0, -1),
-                    Vec2D::new(1, 0),
-                ],
+                vec![],
                 Colour::rgb(255, 0, 0),
-                (0.0, 0.0),
             ),
             BlockType::L => BlockData::new(
-                vec![
-                    Vec2D::new(0, 0),
-                    Vec2D::new(-1, 0),
-                    Vec2D::new(1, 0),
-                    Vec2D::new(1, -1),
-                ],
+                vec![],
                 Colour::rgb(255, 165, 0),
-                (0.0, 0.0),
             ),
             BlockType::J => BlockData::new(
-                vec![
-                    Vec2D::new(0, 0),
-                    Vec2D::new(-1, 0),
-                    Vec2D::new(-1, -1),
-                    Vec2D::new(1, 0),
-                ],
+                vec![],
                 Colour::rgb(0, 0, 255),
-                (0.0, 0.0),
             ),
         }
     }
@@ -119,14 +80,11 @@ impl BlockType {
         variants
     }
 
-    fn get_points(self) -> Vec<Vec2D> {
-        BlockData::from(self).points.clone()
+    fn get_rotation_states(self) -> Vec<Vec<Vec2D>> {
+        BlockData::from(self).rotation_states.clone()
     }
     fn get_colour(self) -> ColChar {
         ColChar::SOLID.with_colour(BlockData::from(self).colour)
-    }
-    fn get_offset(self) -> (f32, f32) {
-        BlockData::from(self).rotation_origin
     }
 }
 
@@ -134,7 +92,7 @@ impl BlockType {
 pub struct Block {
     pub pos: Vec2D,
     block_shape: BlockType,
-    rotation: f32,
+    rotation: usize,
 }
 
 impl Block {
@@ -142,36 +100,25 @@ impl Block {
         Block {
             pos: Vec2D::new(5, 0),
             block_shape,
-            rotation: 0.0,
+            rotation: 0,
         }
     }
 
     pub fn rotate(&mut self) {
-        self.rotation += 90.0
+        self.rotation += 1
     }
 }
 
 impl ViewElement for Block {
     fn active_pixels(&self) -> Vec<Point> {
-        let block_points = self.block_shape.get_points();
+        let rotation_states = self.block_shape.get_rotation_states();
         let block_colour = self.block_shape.get_colour();
-        let (ox, oy) = self.block_shape.get_offset();
 
-        // Rotate points around (0.5, 0.5)
-        let cr = self.rotation.to_radians().cos().round();
-        let sr = self.rotation.to_radians().sin().round();
-        let block_points = block_points
+        let block_points = rotation_states[self.rotation % rotation_states.len()]
             .iter()
             .flat_map(|p| {
-                // Rotate block
-                let pf = (p.x as f32 - ox, p.y as f32 - oy);
-                let rotated = Vec2D::new(
-                    (pf.0 * cr - pf.1 * sr + ox).round() as isize,
-                    (pf.1 * cr + pf.0 * sr + oy).round() as isize,
-                );
-
                 // Position block
-                let mut positioned = rotated + self.pos;
+                let mut positioned = *p + self.pos;
 
                 // Widen block so that each pixels appears square
                 positioned.x *= 2;
