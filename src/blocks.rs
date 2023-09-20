@@ -1,8 +1,8 @@
 use gemini_engine::elements::view::{utils, ColChar, Colour, Point, Vec2D, ViewElement};
-use rand::Rng;
+use rand::{Rng, seq::SliceRandom};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum BlockType {
+pub enum BlockType {
     I,
     J,
     L,
@@ -13,6 +13,15 @@ enum BlockType {
 }
 
 impl BlockType {
+	const ALL_VARIANTS: [BlockType; 7] = [
+		BlockType::I,
+		BlockType::J,
+		BlockType::L,
+		BlockType::O,
+		BlockType::S,
+		BlockType::T,
+		BlockType::Z,
+	];
     fn random() -> BlockType {
         let mut rng = rand::thread_rng();
         return match rng.gen_range(1..=2) {
@@ -21,17 +30,13 @@ impl BlockType {
             _ => panic!("Error getting random block type"),
         };
 
-        match rng.gen_range(1..=7) {
-            1 => BlockType::I,
-            2 => BlockType::J,
-            3 => BlockType::L,
-            4 => BlockType::O,
-            5 => BlockType::S,
-            6 => BlockType::T,
-            7 => BlockType::Z,
-            _ => panic!("Error getting random block type"),
-        }
+		*BlockType::ALL_VARIANTS.choose(&mut rng).unwrap()
     }
+	pub fn bag() -> [BlockType; 7] {
+		let mut variants = BlockType::ALL_VARIANTS;
+		variants.shuffle(&mut rand::thread_rng());
+		variants
+	}
 
     fn get_data(&self) -> (Colour, Vec<Vec2D>) {
         match self {
