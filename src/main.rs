@@ -127,11 +127,6 @@ fn main() {
             }
 
             view.display_render().unwrap();
-            println!("{:?}\r", stationary_blocks.pixels
-            .iter()
-            .filter(|p| p.pos.y == 19)
-            .map(|p| p.pos.x)
-            .collect::<Vec<isize>>());
         },
         FPS
     );

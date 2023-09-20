@@ -1,8 +1,5 @@
 use crossterm::event::{poll, read, Event};
-use gemini_engine::elements::{
-    view::ColChar,
-    PixelContainer, Rect, Vec2D,
-};
+use gemini_engine::elements::{view::ColChar, PixelContainer, Rect, Vec2D};
 use std::{
     thread,
     time::{Duration, Instant},
@@ -97,7 +94,7 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) {
         return;
     }
 
-    let min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
+    let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
     let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
 
     'row: for y in min_y..=max_y {
@@ -114,6 +111,41 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) {
         }
 
         pixels = pixels.into_iter().filter(|p| p.pos.y != y).collect();
+    }
+
+    let mut y = max_y + 1;
+    loop {
+        y -= 1;
+        if y < min_y {
+            break;
+        }
+
+        println!("row at y={:?}\r", y);
+
+        let row_pixels: Vec<isize> = pixels
+            .iter()
+            .filter(|p| p.pos.y == y)
+            .map(|p| p.pos.x)
+            .collect();
+
+        if row_pixels.len() == 0 {
+            println!("row is empty\r");
+            pixels = pixels
+                .iter()
+                .map(|p| {
+                    if p.pos.y < y {
+                        let mut moved_p = *p;
+                        moved_p.pos.y += 1;
+                        moved_p
+                    } else {
+                        *p
+                    }
+                })
+                .collect();
+
+            y += 1;
+            min_y += 1;
+        }
     }
 
     blocks.pixels = pixels;
