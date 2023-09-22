@@ -1,7 +1,7 @@
 use std::process;
 
 use crossterm::{
-    event::{Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use gemini_engine::elements::{
@@ -56,25 +56,22 @@ fn main() {
                 match key_event {
                     KeyEvent {
                         code: KeyCode::Left, // Shift left
-                        modifiers: _,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => {
                         tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0));
                     }
                     KeyEvent {
                         code: KeyCode::Right, // Shift right
-                        modifiers: _,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => {
                         tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0));
                     }
                     KeyEvent {
                         code: KeyCode::Up, // Rotate
-                        modifiers: _,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => {
                         let mut hypothetical_block = block.clone();
                         hypothetical_block.rotate();
@@ -84,15 +81,13 @@ fn main() {
                     }
                     KeyEvent {
                         code: KeyCode::Down, // Soft Drop
-                        modifiers: _,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => block_speed = 2,
                     KeyEvent {
                         code: KeyCode::Char(' '), // Hard drop
-                        modifiers: _,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => {
                         ghost_block = tetris::generate_ghost_block(&collision, &block);
                         score += ghost_block.pos.y - block.pos.y;
@@ -102,8 +97,8 @@ fn main() {
                     KeyEvent {
                         code: KeyCode::Char('c'), // Hold
                         modifiers: KeyModifiers::NONE,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => {
                         if !has_held {
                             let current_held_piece = held_piece;
@@ -121,8 +116,8 @@ fn main() {
                     KeyEvent {
                         code: KeyCode::Char('c'), // Close
                         modifiers: KeyModifiers::CONTROL,
-                        kind: _,
-                        state: _,
+                        kind: KeyEventKind::Press,
+                        ..
                     } => process::exit(0),
                     _ => (),
                 }
