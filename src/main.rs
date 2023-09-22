@@ -69,16 +69,15 @@ fn main() {
                         tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0));
                     }
                     KeyEvent {
-                        code: KeyCode::Up, // Rotate
+                        code: KeyCode::Char('z'), // Rotate Anti-clockwise
                         kind: KeyEventKind::Press,
                         ..
-                    } => {
-                        let mut hypothetical_block = block.clone();
-                        hypothetical_block.rotate();
-                        if !collision.overlaps_element(&hypothetical_block) {
-                            block.rotate();
-                        }
-                    }
+                    } => tetris::try_rotate_block(&collision, &mut block, false),
+                    KeyEvent {
+                        code: KeyCode::Up | KeyCode::Char('x'), // Rotate Clockwise
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => tetris::try_rotate_block(&collision, &mut block, true),
                     KeyEvent {
                         code: KeyCode::Down, // Soft Drop
                         kind: KeyEventKind::Press,

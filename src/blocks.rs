@@ -42,7 +42,7 @@ impl BlockType {
 pub struct Block {
     pub pos: Vec2D,
     pub block_shape: BlockType,
-    rotation: usize,
+    rotation: isize,
     pub(super) is_ghost: bool,
 }
 
@@ -58,8 +58,8 @@ impl Block {
         }
     }
 
-    pub fn rotate(&mut self) {
-        self.rotation += 1
+    pub fn rotate(&mut self, clockwise: bool) {
+        self.rotation += if clockwise { 1 } else { -1 }
     }
 }
 
@@ -82,7 +82,7 @@ impl ViewElement for Block {
             false => self.block_shape.get_colour(),
         };
 
-        let block_points = rotation_states[self.rotation % rotation_states.len()]
+        let block_points = rotation_states[self.rotation.rem_euclid(rotation_states.len() as isize) as usize]
             .iter()
             .flat_map(|p| {
                 // Position block

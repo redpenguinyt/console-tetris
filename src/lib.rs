@@ -100,6 +100,14 @@ pub fn try_move_block(collision: &CollisionContainer, block: &mut Block, offset:
     did_move
 }
 
+pub fn try_rotate_block(collision: &CollisionContainer, block: &mut Block, clockwise: bool) {
+    let mut hypothetical_block = block.clone();
+    hypothetical_block.rotate(clockwise);
+    if !collision.overlaps_element(&hypothetical_block) {
+        block.rotate(clockwise);
+    }
+}
+
 pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Block {
     let mut ghost_block = block.clone();
     ghost_block.is_ghost = true;
