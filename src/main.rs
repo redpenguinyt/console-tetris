@@ -52,8 +52,6 @@ fn main() {
                 }
             };
 
-            ghost_block = tetris::generate_ghost_block(&collision, &block);
-
             if let Some(Event::Key(key_event)) = event {
                 match key_event {
                     KeyEvent {
@@ -96,6 +94,7 @@ fn main() {
                         kind: _,
                         state: _,
                     } => {
+                        ghost_block = tetris::generate_ghost_block(&collision, &block);
                         score += ghost_block.pos.y - block.pos.y;
                         block = ghost_block.clone();
                         i = block_speed - 1
@@ -128,6 +127,8 @@ fn main() {
                     _ => (),
                 }
             }
+
+            ghost_block = tetris::generate_ghost_block(&collision, &block);
 
             i += 1;
             active_block = if i % block_speed == 0 {
