@@ -1,11 +1,11 @@
 use blocks::Block;
-use crossterm::event::{poll, read, Event};
+use crossterm::{event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind}, terminal::disable_raw_mode};
 use gemini_engine::elements::{
     containers::CollisionContainer, view::ColChar, PixelContainer, Rect, Vec2D,
 };
 use std::{
     thread,
-    time::{Duration, Instant},
+    time::{Duration, Instant}, process,
 };
 pub mod blocks;
 
@@ -190,4 +190,33 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
     blocks.pixels = pixels;
 
     cleared_lines
+}
+
+pub fn pause() {
+    println!("-- Paused --\r");
+    loop {
+        let pressed_key = Some(read().unwrap());
+        if let Some(Event::Key(event_key)) = pressed_key
+        {
+            match event_key {
+                KeyEvent {
+                    code: KeyCode::Esc,
+                    kind: KeyEventKind::Press,
+                    ..
+                } => break,
+                KeyEvent {
+                    code: KeyCode::Char('c'), // Close
+                    modifiers: KeyModifiers::CONTROL,
+                    kind: KeyEventKind::Press,
+                    ..
+                } => exit(),
+                _ => ()
+            }
+        }
+    }
+}
+
+pub fn exit() {
+    disable_raw_mode().unwrap();
+    process::exit(0);
 }
