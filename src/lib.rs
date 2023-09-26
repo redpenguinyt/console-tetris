@@ -1,11 +1,14 @@
 use blocks::Block;
-use crossterm::{event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind}, terminal::disable_raw_mode};
+use crossterm::{
+    event::{poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    terminal::disable_raw_mode,
+};
 use gemini_engine::elements::{
     containers::CollisionContainer, view::ColChar, PixelContainer, Rect, Vec2D,
 };
 use std::{
-    thread,
-    time::{Duration, Instant}, process,
+    process, thread,
+    time::{Duration, Instant},
 };
 pub mod blocks;
 
@@ -196,8 +199,7 @@ pub fn pause() {
     println!("-- Paused --\r");
     loop {
         let pressed_key = Some(read().unwrap());
-        if let Some(Event::Key(event_key)) = pressed_key
-        {
+        if let Some(Event::Key(event_key)) = pressed_key {
             match event_key {
                 KeyEvent {
                     code: KeyCode::Esc,
@@ -210,7 +212,7 @@ pub fn pause() {
                     kind: KeyEventKind::Press,
                     ..
                 } => exit(),
-                _ => ()
+                _ => (),
             }
         }
     }

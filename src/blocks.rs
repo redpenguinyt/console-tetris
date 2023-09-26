@@ -82,7 +82,8 @@ impl ViewElement for Block {
             false => self.block_shape.get_colour(),
         };
 
-        let block_points = rotation_states[self.rotation.rem_euclid(rotation_states.len() as isize) as usize]
+        let block_points = rotation_states
+            [self.rotation.rem_euclid(rotation_states.len() as isize) as usize]
             .iter()
             .flat_map(|p| {
                 // Position block
