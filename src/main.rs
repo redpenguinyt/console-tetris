@@ -13,6 +13,7 @@ use tetris::event_gameloop;
 
 const FPS: f32 = 30.0;
 const BLOCK_PLACE_COOLDOWN: u32 = 15;
+const PIECE_PREVIEW_COUNT: usize = 3;
 const CONTROLS_HELP_TEXT: &str = "Controls:
 C to hold
 Left/Right to shift
@@ -53,8 +54,8 @@ fn main() {
                 Some(ref block) => block.clone(),
                 None => {
                     let next_piece = bag.pop().unwrap();
-                    if bag.is_empty() {
-                        bag = BlockType::bag().to_vec();
+                    if bag.len() <= PIECE_PREVIEW_COUNT {
+                        bag.extend(BlockType::bag());
                     }
 
                     TetrisBlock::new(next_piece)
@@ -200,26 +201,28 @@ fn main() {
 
             // Next piece display
             view.blit(
-                &Text::new(Vec2D::new(27, 1), "Next piece:", Modifier::None),
+                &Text::new(Vec2D::new(29, 9), "Next:", Modifier::None),
                 Wrapping::Panic,
             );
-            let mut next_block_display =
-                TetrisBlock::new(*bag.last().expect("7Bag should not be empty"));
-            next_block_display.pos = Vec2D::new(15, 4);
-            view.blit(&next_block_display, Wrapping::Panic);
+
+            for i in 0..PIECE_PREVIEW_COUNT {
+                let mut next_block_display = TetrisBlock::new(bag[bag.len() - i - 1]);
+                next_block_display.pos = Vec2D::new(15, 12 + i as isize * 3);
+                view.blit(&next_block_display, Wrapping::Ignore);
+            }
 
             // Held piece display
             if let Some(piece) = held_piece {
                 view.blit(
-                    &Text::new(Vec2D::new(27, 6), "Held piece:", Modifier::None),
+                    &Text::new(Vec2D::new(29, 1), "Hold", Modifier::None),
                     Wrapping::Panic,
                 );
                 let mut held_block_display = TetrisBlock::new(piece);
-                held_block_display.pos = Vec2D::new(15, 9);
+                held_block_display.pos = Vec2D::new(15, 4);
                 view.blit(&held_block_display, Wrapping::Panic);
             } else {
                 view.blit(
-                    &Sprite::new(Vec2D::new(27, 6), CONTROLS_HELP_TEXT, Modifier::None),
+                    &Sprite::new(Vec2D::new(26, 0), CONTROLS_HELP_TEXT, Modifier::None),
                     Wrapping::Panic,
                 );
             }
@@ -228,7 +231,7 @@ fn main() {
             let mut score_display = String::from("Score: ");
             score_display.push_str(&score.to_string());
             view.blit(
-                &Text::new(Vec2D::new(27, 15), &score_display, Modifier::None),
+                &Text::new(Vec2D::new(26, 7), &score_display, Modifier::None),
                 Wrapping::Panic,
             );
 
