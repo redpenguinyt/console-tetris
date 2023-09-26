@@ -29,7 +29,7 @@ fn main() {
 
     enable_raw_mode().unwrap();
 
-    let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(0..8)].to_vec();
+    let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec();
     let mut block_speed = 12;
 
     let level = 1;
@@ -45,10 +45,12 @@ fn main() {
             let mut block = match active_block {
                 Some(ref block) => block.clone(),
                 None => {
+                    let next_piece = bag.pop().unwrap();
                     if bag.is_empty() {
                         bag = BlockType::bag().to_vec();
                     }
-                    TetrisBlock::new(bag.pop().unwrap())
+
+                    TetrisBlock::new(next_piece)
                 }
             };
 
@@ -158,14 +160,25 @@ fn main() {
                 view.blit(block, Wrapping::Ignore);
             }
 
+            // Next piece display
+            if !bag.is_empty() {
+                view.blit(
+                    &Text::new(Vec2D::new(27, 1), "Next piece:", Modifier::None),
+                    Wrapping::Panic,
+                );
+                let mut next_block_display = TetrisBlock::new(*bag.last().unwrap());
+                next_block_display.pos = Vec2D::new(15, 3);
+                view.blit(&next_block_display, Wrapping::Panic);
+            }
+
             // Held piece display
             if let Some(piece) = held_piece {
                 view.blit(
-                    &Text::new(Vec2D::new(27, 2), "Held piece:", Modifier::None),
+                    &Text::new(Vec2D::new(27, 5), "Held piece:", Modifier::None),
                     Wrapping::Panic,
                 );
                 let mut held_block_display = TetrisBlock::new(piece);
-                held_block_display.pos = Vec2D::new(15, 4);
+                held_block_display.pos = Vec2D::new(15, 7);
                 view.blit(&held_block_display, Wrapping::Panic);
             }
 
@@ -173,7 +186,7 @@ fn main() {
             let mut score_display = String::from("Score: ");
             score_display.push_str(&score.to_string());
             view.blit(
-                &Text::new(Vec2D::new(27, 6), &score_display, Modifier::None),
+                &Text::new(Vec2D::new(27, 9), &score_display, Modifier::None),
                 Wrapping::Panic,
             );
 

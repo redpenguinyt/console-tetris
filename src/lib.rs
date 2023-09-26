@@ -13,7 +13,7 @@ pub fn wait_fps_with_event(fps: f32, elapsed: Option<Duration>) -> (bool, Option
     let elapsed = elapsed.unwrap_or_default();
     let mut fps_reciprocal = Duration::from_secs_f32(1.0 / fps);
     let frame_skip = if elapsed < fps_reciprocal {
-        fps_reciprocal = fps_reciprocal - elapsed;
+        fps_reciprocal -= elapsed;
         false
     } else {
         true
@@ -25,7 +25,6 @@ pub fn wait_fps_with_event(fps: f32, elapsed: Option<Duration>) -> (bool, Option
 
     if event_elapsed < fps_reciprocal {
         thread::sleep(fps_reciprocal - event_elapsed);
-    } else {
     };
 
     match does_event_exist {
@@ -112,7 +111,7 @@ pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Bl
     let mut ghost_block = block.clone();
     ghost_block.is_ghost = true;
 
-    while try_move_block(&collision, &mut ghost_block, Vec2D::new(0, 1)) {}
+    while try_move_block(collision, &mut ghost_block, Vec2D::new(0, 1)) {}
 
     ghost_block
 }
@@ -142,7 +141,7 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
         }
 
         cleared_lines += 1;
-        pixels = pixels.into_iter().filter(|p| p.pos.y != y).collect();
+        pixels.retain(|p| p.pos.y != y);
     }
 
     let mut y = max_y + 1;
@@ -160,7 +159,7 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
             .map(|p| p.pos.x)
             .collect();
 
-        if row_pixels.len() == 0 {
+        if row_pixels.is_empty() {
             println!("row is empty\r");
             pixels = pixels
                 .iter()

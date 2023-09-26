@@ -1,7 +1,7 @@
 use gemini_engine::elements::view::{utils, ColChar, Point, Vec2D, ViewElement};
-use rand::seq::SliceRandom;
 mod block_data;
 use block_data::BlockData;
+use rand::seq::SliceRandom;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BlockType {
@@ -78,7 +78,7 @@ impl ViewElement for Block {
     fn active_pixels(&self) -> Vec<Point> {
         let rotation_states = self.block_shape.get_rotation_states();
         let block_colour = match self.is_ghost {
-            true => ColChar::SOLID.with_rgb(100, 100, 100),
+            true => ColChar::BACKGROUND, // .with_mod(Modifier::Colour(Colour::greyscale(255)))
             false => self.block_shape.get_colour(),
         };
 
