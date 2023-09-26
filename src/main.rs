@@ -1,19 +1,24 @@
 use std::process;
 
 use crossterm::{
-    event::{Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind},
+    event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     terminal::{disable_raw_mode, enable_raw_mode},
 };
 use gemini_engine::elements::{
     containers::CollisionContainer,
     view::{ColChar, Modifier, Wrapping},
-    PixelContainer, Text, Vec2D, View,
+    PixelContainer, Text, Vec2D, View, Sprite,
 };
 use rand::Rng;
 use tetris::blocks::{Block as TetrisBlock, BlockType};
 use tetris::event_gameloop;
 
 const FPS: f32 = 30.0;
+const BLOCK_PLACE_COOLDOWN: u32 = 15;
+const CONTROLS_HELP_TEXT: &str = "Controls: C to hold
+Left/Right to shift
+Space hard | Down soft
+Z AC | Up/X C rotation";
 
 fn main() {
     let mut view = View::new(50, 21, ColChar::EMPTY);
@@ -31,6 +36,8 @@ fn main() {
 
     let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec();
     let mut block_speed = 12;
+
+    let mut placing_cooldown = 0;
 
     let level = 1;
     let mut score = 0;
@@ -61,25 +68,39 @@ fn main() {
                         kind: KeyEventKind::Press,
                         ..
                     } => {
-                        tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0));
+                        if tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0)) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
+                        }
                     }
+
                     KeyEvent {
                         code: KeyCode::Right, // Shift right
                         kind: KeyEventKind::Press,
                         ..
                     } => {
-                        tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0));
+                        if tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0)) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
+                        }
                     }
+
                     KeyEvent {
                         code: KeyCode::Char('z'), // Rotate Anti-clockwise
                         kind: KeyEventKind::Press,
                         ..
-                    } => tetris::try_rotate_block(&collision, &mut block, false),
+                    } => {
+                        if tetris::try_rotate_block(&collision, &mut block, false) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
+                        }
+                    }
                     KeyEvent {
                         code: KeyCode::Up | KeyCode::Char('x'), // Rotate Clockwise
                         kind: KeyEventKind::Press,
                         ..
-                    } => tetris::try_rotate_block(&collision, &mut block, true),
+                    } => {
+                        if tetris::try_rotate_block(&collision, &mut block, true) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
+                        }
+                    }
                     KeyEvent {
                         code: KeyCode::Down, // Soft Drop
                         kind: KeyEventKind::Press,
@@ -93,7 +114,8 @@ fn main() {
                         ghost_block = tetris::generate_ghost_block(&collision, &block);
                         score += ghost_block.pos.y - block.pos.y;
                         block = ghost_block.clone();
-                        i = block_speed - 1
+                        i = block_speed - 1;
+                        placing_cooldown = 1;
                     }
                     KeyEvent {
                         code: KeyCode::Char('c'), // Hold
@@ -119,31 +141,41 @@ fn main() {
                         modifiers: KeyModifiers::CONTROL,
                         kind: KeyEventKind::Press,
                         ..
-                    } => process::exit(0),
+                    } => {
+                        disable_raw_mode().unwrap();
+                        process::exit(0);
+                    }
                     _ => (),
                 }
             }
 
             ghost_block = tetris::generate_ghost_block(&collision, &block);
 
+            let is_above_block = collision.will_overlap_element(&block, Vec2D::new(0, 1));
+
             i += 1;
-            active_block = if i % block_speed == 0 {
+            active_block = if i % block_speed == 0 || is_above_block {
                 if tetris::try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
                     if block_speed == 2 {
                         score += 1;
                     }
                     Some(block)
                 } else {
-                    has_held = false;
-                    stationary_blocks.blit(&block);
-                    if block.pos.y < 1 {
-                        return true;
+                    placing_cooldown -= 1;
+                    if placing_cooldown == 0 {
+                        has_held = false;
+                        stationary_blocks.blit(&block);
+                        if block.pos.y < 1 {
+                            return true;
+                        }
+                        let cleared_lines = tetris::clear_filled_lines(&mut stationary_blocks);
+                        if cleared_lines > 0 {
+                            score += (cleared_lines * 2 - 1) * 100 * level;
+                        }
+                        None
+                    } else {
+                        Some(block)
                     }
-                    let cleared_lines = tetris::clear_filled_lines(&mut stationary_blocks);
-                    if cleared_lines > 0 {
-                        score += (cleared_lines * 2 - 1) * 100 * level;
-                    }
-                    None
                 }
             } else {
                 Some(block)
@@ -161,32 +193,35 @@ fn main() {
             }
 
             // Next piece display
-            if !bag.is_empty() {
-                view.blit(
-                    &Text::new(Vec2D::new(27, 1), "Next piece:", Modifier::None),
-                    Wrapping::Panic,
-                );
-                let mut next_block_display = TetrisBlock::new(*bag.last().unwrap());
-                next_block_display.pos = Vec2D::new(15, 3);
-                view.blit(&next_block_display, Wrapping::Panic);
-            }
+            view.blit(
+                &Text::new(Vec2D::new(27, 1), "Next piece:", Modifier::None),
+                Wrapping::Panic,
+            );
+            let mut next_block_display = TetrisBlock::new(*bag.last().expect("7Bag should not be empty"));
+            next_block_display.pos = Vec2D::new(15, 4);
+            view.blit(&next_block_display, Wrapping::Panic);
 
             // Held piece display
             if let Some(piece) = held_piece {
                 view.blit(
-                    &Text::new(Vec2D::new(27, 5), "Held piece:", Modifier::None),
+                    &Text::new(Vec2D::new(27, 6), "Held piece:", Modifier::None),
                     Wrapping::Panic,
                 );
                 let mut held_block_display = TetrisBlock::new(piece);
-                held_block_display.pos = Vec2D::new(15, 7);
+                held_block_display.pos = Vec2D::new(15, 9);
                 view.blit(&held_block_display, Wrapping::Panic);
+            } else {
+                view.blit(
+                    &Sprite::new(Vec2D::new(27, 6), CONTROLS_HELP_TEXT, Modifier::None),
+                    Wrapping::Panic,
+                );
             }
 
             // Score display
             let mut score_display = String::from("Score: ");
             score_display.push_str(&score.to_string());
             view.blit(
-                &Text::new(Vec2D::new(27, 9), &score_display, Modifier::None),
+                &Text::new(Vec2D::new(27, 11), &score_display, Modifier::None),
                 Wrapping::Panic,
             );
 

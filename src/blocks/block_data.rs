@@ -20,8 +20,8 @@ impl From<BlockType> for BlockData {
                 vec![vec![
                     Vec2D::new(0, 0),
                     Vec2D::new(1, 0),
-                    Vec2D::new(0, 1),
-                    Vec2D::new(1, 1),
+                    Vec2D::new(0, -1),
+                    Vec2D::new(1, -1),
                 ]],
                 Colour::rgb(255, 255, 0),
             ),

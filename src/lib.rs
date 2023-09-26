@@ -43,6 +43,7 @@ macro_rules! event_gameloop {
         use tetris::wait_fps_with_event;
         let mut frame_skip = false;
         let mut event = None;
+
         loop {
             let now = Instant::now();
 
@@ -99,12 +100,19 @@ pub fn try_move_block(collision: &CollisionContainer, block: &mut Block, offset:
     did_move
 }
 
-pub fn try_rotate_block(collision: &CollisionContainer, block: &mut Block, clockwise: bool) {
+pub fn try_rotate_block(
+    collision: &CollisionContainer,
+    block: &mut Block,
+    clockwise: bool,
+) -> bool {
     let mut hypothetical_block = block.clone();
     hypothetical_block.rotate(clockwise);
-    if !collision.overlaps_element(&hypothetical_block) {
+    let did_move = !collision.overlaps_element(&hypothetical_block);
+    if did_move {
         block.rotate(clockwise);
     }
+
+    did_move
 }
 
 pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Block {
