@@ -196,7 +196,7 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
 }
 
 pub fn pause() {
-    println!("-- Paused --\r");
+    println!("-- Paused (Esc to unpause) --\r");
     loop {
         let pressed_key = Some(read().unwrap());
         if let Some(Event::Key(event_key)) = pressed_key {
