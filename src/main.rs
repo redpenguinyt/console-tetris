@@ -62,96 +62,103 @@ fn main() {
                 }
             };
 
-            if let Some(real_event) = event {
-                match real_event {
-                    Event::FocusLost => tetris::pause(),
-                    Event::Key(key_event) => match key_event {
-                        KeyEvent {
-                            code: KeyCode::Esc,
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => tetris::pause(),
-                        KeyEvent {
-                            code: KeyCode::Left, // Shift left
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            if tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0)) {
-                                placing_cooldown = BLOCK_PLACE_COOLDOWN;
-                            }
-                        }
+            if let Some(Event::Key(key_event)) = event {
+                match key_event {
+                    KeyEvent {
+                        code: KeyCode::Esc,
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        view.clear();
+                        view.display_render().unwrap();
+                        tetris::pause()
+                    }
 
-                        KeyEvent {
-                            code: KeyCode::Right, // Shift right
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            if tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0)) {
-                                placing_cooldown = BLOCK_PLACE_COOLDOWN;
-                            }
+                    KeyEvent {
+                        code: KeyCode::Left, // Shift left
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        if tetris::try_move_block(&collision, &mut block, Vec2D::new(-1, 0)) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         }
+                    }
 
-                        KeyEvent {
-                            code: KeyCode::Char('z'), // Rotate Anti-clockwise
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            if tetris::try_rotate_block(&collision, &mut block, false) {
-                                placing_cooldown = BLOCK_PLACE_COOLDOWN;
-                            }
+                    KeyEvent {
+                        code: KeyCode::Right, // Shift right
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        if tetris::try_move_block(&collision, &mut block, Vec2D::new(1, 0)) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         }
-                        KeyEvent {
-                            code: KeyCode::Up | KeyCode::Char('x'), // Rotate Clockwise
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            if tetris::try_rotate_block(&collision, &mut block, true) {
-                                placing_cooldown = BLOCK_PLACE_COOLDOWN;
-                            }
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::Char('z'), // Rotate Anti-clockwise
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        if tetris::try_rotate_block(&collision, &mut block, false) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         }
-                        KeyEvent {
-                            code: KeyCode::Down, // Soft Drop
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => block_speed = 2,
-                        KeyEvent {
-                            code: KeyCode::Char(' '), // Hard drop
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            ghost_block = tetris::generate_ghost_block(&collision, &block);
-                            score += ghost_block.pos.y - block.pos.y;
-                            block = ghost_block.clone();
-                            i = block_speed - 1;
-                            placing_cooldown = 1;
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::Up | KeyCode::Char('x'), // Rotate Clockwise
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        if tetris::try_rotate_block(&collision, &mut block, true) {
+                            placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         }
-                        KeyEvent {
-                            code: KeyCode::Char('c'), // Hold
-                            modifiers: KeyModifiers::NONE,
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => {
-                            if !has_held {
-                                let current_held_piece = held_piece;
-                                held_piece = Some(block.block_shape);
-                                match current_held_piece {
-                                    Some(piece) => block = TetrisBlock::new(piece),
-                                    None => {
-                                        active_block = None;
-                                        return false;
-                                    }
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::Down, // Soft Drop
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => block_speed = 2,
+
+                    KeyEvent {
+                        code: KeyCode::Char(' '), // Hard drop
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        ghost_block = tetris::generate_ghost_block(&collision, &block);
+                        score += ghost_block.pos.y - block.pos.y;
+                        block = ghost_block.clone();
+                        i = block_speed - 1;
+                        placing_cooldown = 1;
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::Char('c'), // Hold
+                        modifiers: KeyModifiers::NONE,
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => {
+                        if !has_held {
+                            let current_held_piece = held_piece;
+                            held_piece = Some(block.block_shape);
+                            match current_held_piece {
+                                Some(piece) => block = TetrisBlock::new(piece),
+                                None => {
+                                    active_block = None;
+                                    return false;
                                 }
-                                has_held = true;
                             }
+                            has_held = true;
                         }
-                        KeyEvent {
-                            code: KeyCode::Char('c'), // Close
-                            modifiers: KeyModifiers::CONTROL,
-                            kind: KeyEventKind::Press,
-                            ..
-                        } => tetris::exit(),
-                        _ => (),
-                    },
+                    }
+
+                    KeyEvent {
+                        code: KeyCode::Char('c'), // Close
+                        modifiers: KeyModifiers::CONTROL,
+                        kind: KeyEventKind::Press,
+                        ..
+                    } => tetris::exit(),
+
                     _ => (),
                 }
             }
