@@ -1,4 +1,4 @@
-use blocks::Block;
+use blocks::{Block, BlockType};
 use crossterm::{
     event::{poll, read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
     terminal::disable_raw_mode,
@@ -108,11 +108,26 @@ pub fn try_rotate_block(
     block: &mut Block,
     clockwise: bool,
 ) -> bool {
+    if let BlockType::O = block.block_shape {
+        return false;
+    }
+
+    let rotation_index = block.get_rotation_indexes(clockwise);
+    // println!("{:?}\r", rotation_index);
     let mut hypothetical_block = block.clone();
     hypothetical_block.rotate(clockwise);
-    let did_move = !collision.overlaps_element(&hypothetical_block);
-    if did_move {
-        block.rotate(clockwise);
+
+    let mut did_move = false;
+    for possible_offset in &block.block_shape.get_wall_kick_data()[&rotation_index] {
+        // println!("potential offset {}\r", possible_offset);
+        hypothetical_block.pos = block.pos + *possible_offset;
+        if !collision.overlaps_element(&hypothetical_block) {
+            // println!("worked!\r");
+            did_move = true;
+            block.pos += *possible_offset;
+            block.rotate(clockwise);
+            break;
+        }
     }
 
     did_move

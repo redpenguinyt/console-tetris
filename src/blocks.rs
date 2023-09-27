@@ -1,7 +1,17 @@
+use std::collections::HashMap;
+
 use gemini_engine::elements::view::{utils, ColChar, Point, Vec2D, ViewElement};
 mod block_data;
 use block_data::BlockData;
 use rand::seq::SliceRandom;
+
+fn bool_to_polarity(value: bool) -> isize {
+    if value {
+        1
+    } else {
+        -1
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BlockType {
@@ -36,13 +46,16 @@ impl BlockType {
     fn get_colour(self) -> ColChar {
         ColChar::SOLID.with_colour(BlockData::from(self).colour)
     }
+    pub(super) fn get_wall_kick_data(self) -> HashMap<(usize, usize), Vec<Vec2D>> {
+        BlockData::from(self).wall_kick_data.clone()
+    }
 }
 
 #[derive(Debug)]
 pub struct Block {
     pub pos: Vec2D,
     pub block_shape: BlockType,
-    rotation: isize,
+    pub rotation: usize,
     pub(super) is_ghost: bool,
 }
 
@@ -58,8 +71,19 @@ impl Block {
         }
     }
 
+    fn rot_state_len(&self) -> isize {
+        self.block_shape.get_rotation_states().len() as isize
+    }
+    pub fn get_rotation_indexes(&self, clockwise: bool) -> (usize, usize) {
+        (
+            self.rotation,
+            (self.rotation as isize + bool_to_polarity(clockwise)).rem_euclid(self.rot_state_len())
+                as usize,
+        )
+    }
     pub fn rotate(&mut self, clockwise: bool) {
-        self.rotation += if clockwise { 1 } else { -1 }
+        self.rotation = (self.rotation as isize + bool_to_polarity(clockwise))
+            .rem_euclid(self.rot_state_len()) as usize;
     }
 }
 
@@ -83,7 +107,7 @@ impl ViewElement for Block {
         };
 
         let block_points = rotation_states
-            [self.rotation.rem_euclid(rotation_states.len() as isize) as usize]
+            [self.rotation.rem_euclid(rotation_states.len())]
             .iter()
             .flat_map(|p| {
                 // Position block
