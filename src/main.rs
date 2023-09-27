@@ -38,7 +38,7 @@ fn main() {
     let mut bag = BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec();
     let mut block_speed = 12;
 
-    let mut placing_cooldown = 0;
+    let mut placing_cooldown = BLOCK_PLACE_COOLDOWN;
 
     let level = 1;
     let mut score = 0;
@@ -200,11 +200,11 @@ fn main() {
         },
         {
             view.clear();
-            view.blit(&game_boundaries, Wrapping::Panic);
-            view.blit(&stationary_blocks, Wrapping::Ignore);
-            view.blit(&ghost_block, Wrapping::Ignore);
+            view.blit_double_width(&game_boundaries, Wrapping::Panic);
+            view.blit_double_width(&stationary_blocks, Wrapping::Ignore);
+            view.blit_double_width(&ghost_block, Wrapping::Ignore);
             if let Some(ref block) = active_block {
-                view.blit(block, Wrapping::Ignore);
+                view.blit_double_width(block, Wrapping::Ignore);
             }
 
             // Next piece display
@@ -216,7 +216,7 @@ fn main() {
             for i in 0..PIECE_PREVIEW_COUNT {
                 let mut next_block_display = TetrisBlock::new(bag[bag.len() - i - 1]);
                 next_block_display.pos = Vec2D::new(15, 12 + i as isize * 3);
-                view.blit(&next_block_display, Wrapping::Ignore);
+                view.blit_double_width(&next_block_display, Wrapping::Ignore);
             }
 
             // Held piece display
@@ -227,7 +227,7 @@ fn main() {
                 );
                 let mut held_block_display = TetrisBlock::new(piece);
                 held_block_display.pos = Vec2D::new(15, 4);
-                view.blit(&held_block_display, Wrapping::Panic);
+                view.blit_double_width(&held_block_display, Wrapping::Panic);
             } else {
                 view.blit(
                     &Sprite::new(Vec2D::new(26, 0), CONTROLS_HELP_TEXT, Modifier::None),

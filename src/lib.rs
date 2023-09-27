@@ -75,19 +75,19 @@ pub fn generate_borders() -> PixelContainer {
     borders.blit(&Rect::new(
         // Left wall
         Vec2D::new(0, 0),
-        Vec2D::new(2, 21),
+        Vec2D::new(1, 21),
         ColChar::SOLID,
     ));
     borders.blit(&Rect::new(
         // Right wall
-        Vec2D::new(22, 0),
-        Vec2D::new(2, 21),
+        Vec2D::new(11, 0),
+        Vec2D::new(1, 21),
         ColChar::SOLID,
     ));
     borders.blit(&Rect::new(
         // Floor
-        Vec2D::new(2, 20),
-        Vec2D::new(20, 1),
+        Vec2D::new(1, 20),
+        Vec2D::new(10, 1),
         ColChar::SOLID,
     ));
 
@@ -160,7 +160,7 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
             .map(|p| p.pos.x)
             .collect();
 
-        for x in 2..22 {
+        for x in 1..11 {
             if !row_pixels.contains(&x) {
                 continue 'row;
             }

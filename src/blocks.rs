@@ -106,17 +106,9 @@ impl ViewElement for Block {
             false => self.block_shape.get_colour(),
         };
 
-        let block_points = rotation_states
-            [self.rotation.rem_euclid(rotation_states.len())]
+        let block_points = rotation_states[self.rotation.rem_euclid(rotation_states.len())]
             .iter()
-            .flat_map(|p| {
-                // Position block
-                let mut positioned = *p + self.pos;
-
-                // Widen block so that each pixels appears square
-                positioned.x *= 2;
-                vec![positioned, positioned + Vec2D::new(1, 0)]
-            })
+            .map(|p| *p + self.pos)
             .collect();
 
         utils::points_to_pixels(block_points, block_colour)
