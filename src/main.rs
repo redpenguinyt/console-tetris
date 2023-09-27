@@ -62,6 +62,7 @@ fn main() {
                 }
             };
 
+            // Handle user input
             if let Some(Event::Key(key_event)) = event {
                 match key_event {
                     KeyEvent {
@@ -200,8 +201,8 @@ fn main() {
         {
             view.clear();
             view.blit(&game_boundaries, Wrapping::Panic);
-            view.blit(&stationary_blocks, Wrapping::Panic);
-            view.blit(&ghost_block, Wrapping::Panic);
+            view.blit(&stationary_blocks, Wrapping::Ignore);
+            view.blit(&ghost_block, Wrapping::Ignore);
             if let Some(ref block) = active_block {
                 view.blit(block, Wrapping::Ignore);
             }
