@@ -55,7 +55,10 @@ fn main() {
                 None => {
                     let next_piece = bag.pop().unwrap();
                     if bag.len() <= PIECE_PREVIEW_COUNT {
-                        bag.extend(BlockType::bag());
+                        let mut new_bag = BlockType::bag().to_vec();
+                        new_bag.extend(&bag);
+                        bag.clear();
+                        bag.extend(new_bag);
                     }
 
                     TetrisBlock::new(next_piece)
@@ -178,6 +181,7 @@ fn main() {
                 } else {
                     placing_cooldown -= 1;
                     if placing_cooldown == 0 {
+                        placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         has_held = false;
                         stationary_blocks.blit(&block);
                         if block.pos.y < 1 {
@@ -236,10 +240,8 @@ fn main() {
             }
 
             // Score display
-            let mut score_display = String::from("Score: ");
-            score_display.push_str(&score.to_string());
             view.blit(
-                &Text::new(Vec2D::new(26, 7), &score_display, Modifier::None),
+                &Text::new(Vec2D::new(26, 7), &format!("Score: {}", score), Modifier::None),
                 Wrapping::Panic,
             );
 
