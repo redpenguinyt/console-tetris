@@ -241,7 +241,11 @@ fn main() {
 
             // Score display
             view.blit(
-                &Text::new(Vec2D::new(26, 7), &format!("Score: {}", score), Modifier::None),
+                &Text::new(
+                    Vec2D::new(26, 7),
+                    &format!("Score: {}", score),
+                    Modifier::None,
+                ),
                 Wrapping::Panic,
             );
 

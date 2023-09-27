@@ -116,7 +116,7 @@ impl BlockData {
                         Vec2D::new(1, 0),
                         Vec2D::new(-2, 1),
                         Vec2D::new(1, -2),
-                    ]
+                    ],
                 ),
                 (
                     (1, 0),
@@ -126,7 +126,7 @@ impl BlockData {
                         Vec2D::new(-1, 0),
                         Vec2D::new(2, -1),
                         Vec2D::new(-1, 2),
-                    ]
+                    ],
                 ),
                 (
                     (1, 2),
@@ -136,7 +136,7 @@ impl BlockData {
                         Vec2D::new(2, 0),
                         Vec2D::new(-1, -2),
                         Vec2D::new(2, 1),
-                    ]
+                    ],
                 ),
                 (
                     (2, 1),
@@ -146,7 +146,7 @@ impl BlockData {
                         Vec2D::new(-2, 0),
                         Vec2D::new(1, 2),
                         Vec2D::new(-2, -1),
-                    ]
+                    ],
                 ),
                 (
                     (2, 3),
@@ -156,7 +156,7 @@ impl BlockData {
                         Vec2D::new(-1, 0),
                         Vec2D::new(2, -1),
                         Vec2D::new(-1, 2),
-                    ]
+                    ],
                 ),
                 (
                     (3, 2),
@@ -166,7 +166,7 @@ impl BlockData {
                         Vec2D::new(1, 0),
                         Vec2D::new(-2, 1),
                         Vec2D::new(1, -2),
-                    ]
+                    ],
                 ),
                 (
                     (3, 0),
@@ -176,7 +176,7 @@ impl BlockData {
                         Vec2D::new(-2, 0),
                         Vec2D::new(1, 2),
                         Vec2D::new(-2, -1),
-                    ]
+                    ],
                 ),
                 (
                     (0, 3),
@@ -186,7 +186,7 @@ impl BlockData {
                         Vec2D::new(2, 0),
                         Vec2D::new(-1, -2),
                         Vec2D::new(2, 1),
-                    ]
+                    ],
                 ),
             ]),
             BlockType::O => HashMap::new(),
