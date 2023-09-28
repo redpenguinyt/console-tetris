@@ -193,6 +193,7 @@ impl BlockData {
         }
     }
 }
+
 impl From<BlockType> for BlockData {
     fn from(block_shape: BlockType) -> Self {
         match block_shape {
