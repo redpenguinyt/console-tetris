@@ -1,9 +1,10 @@
 use std::io::stdout;
 
 use crossterm::{
+    cursor::MoveTo,
     event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    execute,
     terminal::{enable_raw_mode, Clear, ClearType},
-    execute, cursor::MoveTo
 };
 use gemini_engine::elements::{
     containers::CollisionContainer,
@@ -11,8 +12,11 @@ use gemini_engine::elements::{
     PixelContainer, Sprite, Text, Vec2D, View,
 };
 use rand::Rng;
-use tetris::blocks::{Block as TetrisBlock, BlockType};
 use tetris::event_gameloop;
+use tetris::{
+    alerts::{generate_alert_for_filled_lines, AlertDisplay},
+    blocks::{Block as TetrisBlock, BlockType},
+};
 
 const FPS: f32 = 30.0;
 const BLOCK_PLACE_COOLDOWN: u32 = 15;
@@ -29,6 +33,8 @@ fn main() {
     let game_boundaries = tetris::generate_borders();
     let mut stationary_blocks = PixelContainer::new();
 
+    let mut alert_display = AlertDisplay::new(Vec2D::new(12, 7));
+
     let mut held_piece = None;
     let mut has_held = false;
 
@@ -43,7 +49,6 @@ fn main() {
 
     let mut placing_cooldown = BLOCK_PLACE_COOLDOWN;
 
-    let level = 1;
     let mut score = 0;
 
     event_gameloop!(
@@ -191,9 +196,11 @@ fn main() {
                             return true;
                         }
                         let cleared_lines = tetris::clear_filled_lines(&mut stationary_blocks);
-                        if cleared_lines > 0 {
-                            score += (cleared_lines * 2 - 1) * 100 * level;
-                        }
+                        let mut alert = generate_alert_for_filled_lines(cleared_lines);
+                        alert_display.handle_with_score(
+                            &mut score,
+                            alert
+                        );
                         None
                     } else {
                         Some(block)
@@ -252,7 +259,11 @@ fn main() {
                 Wrapping::Panic,
             );
 
-            execute!(stdout(), MoveTo(0,0)).unwrap();
+            // Alerts display
+            view.blit(&alert_display, Wrapping::Ignore);
+            alert_display.frame();
+
+            execute!(stdout(), MoveTo(0, 0)).unwrap();
             execute!(stdout(), Clear(ClearType::FromCursorDown)).unwrap();
             view.display_render().unwrap();
         },

@@ -10,6 +10,7 @@ use std::{
     process, thread,
     time::{Duration, Instant},
 };
+pub mod alerts;
 pub mod blocks;
 
 pub fn wait_fps_with_event(fps: f32, elapsed: Option<Duration>) -> (bool, Option<Event>) {
