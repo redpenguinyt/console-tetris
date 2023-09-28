@@ -44,6 +44,7 @@ impl BlockType {
         BlockData::from(self).rotation_states.clone()
     }
     fn get_colour(self) -> ColChar {
+        // ColChar::EMPTY.with_char('▒') // Colourless
         ColChar::SOLID.with_colour(BlockData::from(self).colour)
     }
     pub(super) fn get_wall_kick_data(self) -> HashMap<(usize, usize), Vec<Vec2D>> {

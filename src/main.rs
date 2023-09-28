@@ -1,6 +1,9 @@
+use std::io::stdout;
+
 use crossterm::{
     event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
-    terminal::enable_raw_mode,
+    terminal::{enable_raw_mode, Clear, ClearType},
+    execute, cursor::MoveTo
 };
 use gemini_engine::elements::{
     containers::CollisionContainer,
@@ -249,6 +252,8 @@ fn main() {
                 Wrapping::Panic,
             );
 
+            execute!(stdout(), MoveTo(0,0)).unwrap();
+            execute!(stdout(), Clear(ClearType::FromCursorDown)).unwrap();
             view.display_render().unwrap();
         },
         FPS

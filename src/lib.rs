@@ -113,16 +113,13 @@ pub fn try_rotate_block(
     }
 
     let rotation_index = block.get_rotation_indexes(clockwise);
-    // println!("{:?}\r", rotation_index);
     let mut hypothetical_block = block.clone();
     hypothetical_block.rotate(clockwise);
 
     let mut did_move = false;
     for possible_offset in &block.block_shape.get_wall_kick_data()[&rotation_index] {
-        // println!("potential offset {}\r", possible_offset);
         hypothetical_block.pos = block.pos + *possible_offset;
         if !collision.overlaps_element(&hypothetical_block) {
-            // println!("worked!\r");
             did_move = true;
             block.pos += *possible_offset;
             block.rotate(clockwise);
@@ -177,8 +174,6 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
             break;
         }
 
-        println!("row at y={:?}\r", y);
-
         let row_pixels: Vec<isize> = pixels
             .iter()
             .filter(|p| p.pos.y == y)
@@ -186,7 +181,6 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
             .collect();
 
         if row_pixels.is_empty() {
-            println!("row is empty\r");
             pixels = pixels
                 .iter()
                 .map(|p| {
