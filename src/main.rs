@@ -189,6 +189,8 @@ fn main() {
                 } else {
                     placing_cooldown -= 1;
                     if placing_cooldown == 0 {
+                        // Placing a block
+                        let pre_clear_blocks = stationary_blocks.clone();
                         placing_cooldown = BLOCK_PLACE_COOLDOWN;
                         has_held = false;
                         stationary_blocks.blit(&block);
@@ -197,10 +199,15 @@ fn main() {
                         }
                         let cleared_lines = tetris::clear_filled_lines(&mut stationary_blocks);
                         let mut alert = generate_alert_for_filled_lines(cleared_lines);
-                        alert_display.handle_with_score(
-                            &mut score,
-                            alert
-                        );
+                        if let Some(t_spin_alert) = tetris::handle_t_spin(
+                            &CollisionContainer::from(vec![&pre_clear_blocks as _]),
+                            &block,
+                            cleared_lines,
+                        ) {
+                            alert = Some(t_spin_alert)
+                        }
+
+                        alert_display.handle_with_score(&mut score, alert);
                         None
                     } else {
                         Some(block)

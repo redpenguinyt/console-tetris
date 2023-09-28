@@ -4,7 +4,9 @@ use crossterm::{
     terminal::disable_raw_mode,
 };
 use gemini_engine::elements::{
-    containers::CollisionContainer, view::ColChar, PixelContainer, Rect, Vec2D,
+    containers::CollisionContainer,
+    view::{utils, ColChar, ViewElement},
+    PixelContainer, Rect, Vec2D,
 };
 use std::{
     process, thread,
@@ -203,6 +205,53 @@ pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
     blocks.pixels = pixels;
 
     cleared_lines
+}
+
+pub fn handle_t_spin(
+    collision: &CollisionContainer,
+    block: &Block,
+    cleared_lines: isize,
+) -> Option<(isize, String)> {
+    if let BlockType::T = block.block_shape {
+        let collision_pixels = utils::pixels_to_points(collision.active_pixels());
+
+        let positions_to_check: Vec<Vec2D> = [
+            Vec2D::new(1, 1), // Top-left
+            Vec2D::new(1, -1), // Top-right
+            Vec2D::new(-1, 1), // Bottom-left
+            Vec2D::new(-1, -1), // Top-left
+        ]
+        .into_iter()
+        .map(|o| block.pos + o)
+        .collect();
+        let mut counted_positions = 0;
+        for pos in &positions_to_check {
+            if collision_pixels.contains(pos) {
+                counted_positions += 1;
+            }
+        }
+
+        let blocked_from_top_right = if let 0..=2 = block.rotation {
+            collision_pixels.contains(&positions_to_check[1])
+        } else { false };
+        let blocked_from_top_left = if let 0 | 2 | 3 = block.rotation {
+            collision_pixels.contains(&positions_to_check[3])
+        } else { false };
+
+        if counted_positions > 2 && (blocked_from_top_left || blocked_from_top_right) {
+            Some(match cleared_lines {
+                0 => (400, String::from("T-Spin!")),
+                1 => (800, String::from("T-Spin Single!")),
+                2 => (1200, String::from("T-Spin Double!")),
+                3 => (1600, String::from("T-Spin Triple!")),
+                _ => (200, String::from("T-Spin?")),
+            })
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 pub fn pause() {
