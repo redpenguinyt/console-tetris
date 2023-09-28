@@ -216,9 +216,9 @@ pub fn handle_t_spin(
         let collision_pixels = utils::pixels_to_points(collision.active_pixels());
 
         let positions_to_check: Vec<Vec2D> = [
-            Vec2D::new(1, 1), // Top-left
-            Vec2D::new(1, -1), // Top-right
-            Vec2D::new(-1, 1), // Bottom-left
+            Vec2D::new(1, 1),   // Top-left
+            Vec2D::new(1, -1),  // Top-right
+            Vec2D::new(-1, 1),  // Bottom-left
             Vec2D::new(-1, -1), // Top-left
         ]
         .into_iter()
@@ -233,10 +233,14 @@ pub fn handle_t_spin(
 
         let blocked_from_top_right = if let 0..=2 = block.rotation {
             collision_pixels.contains(&positions_to_check[1])
-        } else { false };
+        } else {
+            false
+        };
         let blocked_from_top_left = if let 0 | 2 | 3 = block.rotation {
             collision_pixels.contains(&positions_to_check[3])
-        } else { false };
+        } else {
+            false
+        };
 
         if counted_positions > 2 && (blocked_from_top_left || blocked_from_top_right) {
             Some(match cleared_lines {
