@@ -84,4 +84,14 @@ impl BlockManager {
 
         container
     }
+
+    pub fn held_piece_display(&self) -> Option<Block> {
+        if let Some(piece) = self.held_piece {
+            let mut held_block_display = Block::new(piece);
+            held_block_display.pos = Vec2D::new(15, 4);
+            Some(held_block_display)
+        } else {
+            None
+        }
+    }
 }

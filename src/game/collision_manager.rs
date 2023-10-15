@@ -1,5 +1,5 @@
 use gemini_engine::elements::{
-    containers::CollisionContainer, view::ColChar, PixelContainer, Rect, Vec2D,
+    containers::CollisionContainer, view::{ColChar, ViewElement}, PixelContainer, Rect, Vec2D,
 };
 
 pub fn generate_borders() -> PixelContainer {
@@ -44,5 +44,9 @@ impl CollisionManager {
             &self.game_boundaries as _,
             &self.stationary_blocks as _,
         ])
+    }
+
+    pub fn blit<E: ViewElement>(&mut self, element: &E) {
+        self.stationary_blocks.blit(element)
     }
 }

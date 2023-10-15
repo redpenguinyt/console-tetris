@@ -20,7 +20,7 @@ mod block_manager;
 mod collision_manager;
 mod pause;
 use alerts::AlertDisplay;
-use block_manager::{tetris_core, Block, BlockManager};
+use block_manager::{tetris_core, BlockManager};
 use collision_manager::CollisionManager;
 use pause::pause;
 
@@ -169,19 +169,20 @@ impl MainLoopRoot for Game {
                 if self.block_manager.placing_cooldown == 0 {
                     // Placing a block
                     let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
+
                     self.block_manager.reset_placing_cooldown();
                     self.block_manager.has_held = false;
-                    self.collision_manager.stationary_blocks.blit(&block);
+                    self.collision_manager.blit(&block);
                     if block.pos.y < 1 {
                         println!("Game over!\r");
                         exit_raw_mode()
                     }
+
+                    // Generate alert
                     let cleared_lines = tetris_core::clear_filled_lines(
                         &mut self.collision_manager.stationary_blocks,
                     );
-
                     let mut alert = generate_alert_for_filled_lines(cleared_lines);
-
                     if let Some(t_spin_alert) = tetris_core::handle_t_spin(
                         &CollisionContainer::from(vec![&pre_clear_blocks as _]),
                         &block,
@@ -189,7 +190,6 @@ impl MainLoopRoot for Game {
                     ) {
                         alert = Some(t_spin_alert)
                     }
-
                     self.alert_display.handle_with_score(&mut self.score, alert);
                     None
                 } else {
@@ -203,10 +203,10 @@ impl MainLoopRoot for Game {
 
     fn render_frame(&mut self) {
         self.view.clear();
+
         self.view
-            .blit_double_width(&self.collision_manager.game_boundaries, Wrapping::Panic);
-        self.view
-            .blit_double_width(&self.collision_manager.stationary_blocks, Wrapping::Ignore);
+            .blit_double_width(&self.collision_manager.get(), Wrapping::Ignore);
+
         self.view
             .blit_double_width(&self.block_manager.ghost_block, Wrapping::Ignore);
         if let Some(ref block) = self.block_manager.active_block {
@@ -222,15 +222,15 @@ impl MainLoopRoot for Game {
             .blit_double_width(&self.block_manager.next_piece_display(), Wrapping::Ignore);
 
         // Held piece display
-        if let Some(piece) = self.block_manager.held_piece {
+        if self.block_manager.held_piece.is_some() {
             self.view.blit(
                 &Text::new(Vec2D::new(29, 1), "Hold", Modifier::None),
                 Wrapping::Panic,
             );
-            let mut held_block_display = Block::new(piece);
-            held_block_display.pos = Vec2D::new(15, 4);
-            self.view
-                .blit_double_width(&held_block_display, Wrapping::Panic);
+            self.view.blit_double_width(
+                &self.block_manager.held_piece_display().unwrap(),
+                Wrapping::Ignore,
+            );
         } else {
             self.view.blit(
                 &Sprite::new(Vec2D::new(26, 0), &self.controls_help_text, Modifier::None),
