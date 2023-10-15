@@ -114,11 +114,7 @@ impl MainLoopRoot for Game {
                     self.block_manager.placing_cooldown = 1;
                 }
 
-                KeyCode::Char('c') => {
-                    if self.block_manager.hold() {
-                        return;
-                    }
-                }
+                KeyCode::Char('c') => self.block_manager.hold(),
 
                 _ => (),
             }

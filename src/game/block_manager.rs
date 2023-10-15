@@ -64,8 +64,8 @@ impl BlockManager {
         }
     }
 
-    /// Hold the current block. returns true if need to skip the rest of the frame
-    pub fn hold(&mut self) -> bool {
+    /// Hold the current block
+    pub fn hold(&mut self) {
         if !self.has_held {
             let current_held_piece = self.held_piece;
             self.held_piece = Some(self.block.block_shape);
@@ -73,14 +73,10 @@ impl BlockManager {
                 Some(piece) => self.block = Block::new(piece),
                 None => {
                     self.generate_new_block();
-                    // Skip the rest of the frame
-                    return true;
                 }
             }
             self.has_held = true;
         }
-
-        false
     }
 
     pub fn generate_ghost_block(&mut self, collision: &CollisionContainer) {
