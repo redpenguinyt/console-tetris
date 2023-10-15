@@ -3,7 +3,7 @@ use std::io::stdout;
 use console_input::keypress::{exit_raw_mode, Input};
 use crossterm::{
     cursor::MoveTo,
-    event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers},
+    event::{Event, KeyCode, KeyEvent, KeyEventKind},
     execute,
     terminal::{Clear, ClearType},
 };
@@ -20,7 +20,7 @@ mod block_manager;
 mod collision_manager;
 mod pause;
 use alerts::AlertDisplay;
-use block_manager::{BlockManager, tetris_core};
+use block_manager::{tetris_core, BlockManager};
 use collision_manager::CollisionManager;
 use pause::pause;
 
@@ -64,83 +64,57 @@ impl MainLoopRoot for Game {
 
         let collision = self.collision_manager.get();
 
-        // Handle user input
-        if let Some(Event::Key(key_event)) = input_data {
-            match key_event {
-                KeyEvent {
-                    code: KeyCode::Esc,
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
+        // If the event is a keypres...
+        if let Some(Event::Key(KeyEvent {
+            code,
+            kind: KeyEventKind::Press,
+            ..
+        })) = input_data
+        {
+            match code {
+                // Pause
+                KeyCode::Esc => {
                     self.view.clear();
                     self.view.display_render().unwrap();
                     pause();
                 }
 
-                KeyEvent {
-                    code: KeyCode::Left, // Shift left
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
-                    if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(-1, 0)) {
-                        self.block_manager.reset_placing_cooldown();
-                    }
+                // Shift left
+                KeyCode::Left => {
+                    self.block_manager
+                        .try_move_block(&collision, Vec2D::new(-1, 0));
                 }
 
-                KeyEvent {
-                    code: KeyCode::Right, // Shift right
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
-                    if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(1, 0)) {
-                        self.block_manager.reset_placing_cooldown();
-                    }
+                // Shift right
+                KeyCode::Right => {
+                    self.block_manager
+                        .try_move_block(&collision, Vec2D::new(1, 0));
                 }
 
-                KeyEvent {
-                    code: KeyCode::Char('z'), // Rotate Anti-clockwise
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
-                    if tetris_core::try_rotate_block(&collision, &mut self.block_manager.block, false) {
-                        self.block_manager.reset_placing_cooldown();
-                    }
+                // Rotate anti-clockwise
+                KeyCode::Char('z') => {
+                    self.block_manager.try_rotate_block(&collision, false);
                 }
 
-                KeyEvent {
-                    code: KeyCode::Up | KeyCode::Char('x'), // Rotate Clockwise
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
-                    if tetris_core::try_rotate_block(&collision, &mut self.block_manager.block, true) {
-                        self.block_manager.reset_placing_cooldown();
-                    }
+                // Rotate clockwise
+                KeyCode::Up | KeyCode::Char('x') => {
+                    self.block_manager.try_rotate_block(&collision, true);
                 }
 
-                KeyEvent {
-                    code: KeyCode::Down, // Soft Drop
-                    kind: KeyEventKind::Press,
-                    ..
-                } => block_speed = 2,
+                // Soft drop
+                KeyCode::Down => block_speed = 2,
 
-                KeyEvent {
-                    code: KeyCode::Char(' '), // Hard drop
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
+                // Hard drop
+                KeyCode::Char(' ') => {
                     self.block_manager.generate_ghost_block(&collision);
-                    self.score += self.block_manager.ghost_block.pos.y - self.block_manager.block.pos.y;
+                    self.score +=
+                        self.block_manager.ghost_block.pos.y - self.block_manager.block.pos.y;
                     self.block_manager.block = self.block_manager.ghost_block.clone();
                     self.t = block_speed - 1;
                     self.block_manager.placing_cooldown = 1;
                 }
 
-                KeyEvent {
-                    code: KeyCode::Char('c'), // Hold
-                    modifiers: KeyModifiers::NONE,
-                    kind: KeyEventKind::Press,
-                    ..
-                } => {
+                KeyCode::Char('c') => {
                     if self.block_manager.hold() {
                         return;
                     }
@@ -152,11 +126,15 @@ impl MainLoopRoot for Game {
 
         self.block_manager.generate_ghost_block(&collision);
 
-        let is_above_block = collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1));
+        let is_above_block =
+            collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1));
 
         self.t += 1;
         if self.t % block_speed == 0 || is_above_block {
-            if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(0, 1)) {
+            if self
+                .block_manager
+                .try_move_block(&collision, Vec2D::new(0, 1))
+            {
                 if block_speed == 2 {
                     self.score += 1;
                 }
@@ -200,7 +178,8 @@ impl MainLoopRoot for Game {
 
         self.view
             .blit_double_width(&self.block_manager.ghost_block, Wrapping::Ignore);
-        self.view.blit_double_width(&self.block_manager.block, Wrapping::Ignore);
+        self.view
+            .blit_double_width(&self.block_manager.block, Wrapping::Ignore);
 
         // Next piece display
         self.view.blit(

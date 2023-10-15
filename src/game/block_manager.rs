@@ -47,6 +47,23 @@ impl BlockManager {
         self.block = Block::new(next_piece);
     }
 
+    /// Attempt to move the block. Resets the placing cooldown and returns true if successful
+    pub fn try_move_block(&mut self, collision: &CollisionContainer, offset: Vec2D) -> bool {
+        let did_move = tetris_core::try_move_block(collision, &mut self.block, offset);
+        if did_move {
+            self.reset_placing_cooldown();
+        }
+        did_move
+    }
+
+    /// Attempt to rotate the block. Resets the placing cooldown and returns true if successful
+    pub fn try_rotate_block(&mut self, collision: &CollisionContainer, clockwise: bool) {
+        let did_rotate = tetris_core::try_rotate_block(collision, &mut self.block, clockwise);
+        if did_rotate {
+            self.reset_placing_cooldown();
+        }
+    }
+
     /// Hold the current block. returns true if need to skip the rest of the frame
     pub fn hold(&mut self) -> bool {
         if !self.has_held {
