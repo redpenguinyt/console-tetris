@@ -1,7 +1,7 @@
 use gemini_engine::elements::{
     ascii::TextAlign,
     view::{Modifier, ViewElement},
-    Point, Text, Vec2D,
+    Pixel, Text, Vec2D,
 };
 
 const ALERT_LIFETIME: u16 = 12;
@@ -55,7 +55,7 @@ impl AlertDisplay {
                 self.alerts[i].1 -= 1;
                 if self.alerts[i].1 == 0 {
                     self.alerts.remove(i);
-                    i -= 1;
+                    i = i.saturating_sub(1);
                 }
 
                 i += 1;
@@ -65,7 +65,7 @@ impl AlertDisplay {
 }
 
 impl ViewElement for AlertDisplay {
-    fn active_pixels(&self) -> Vec<Point> {
+    fn active_pixels(&self) -> Vec<Pixel> {
         self.alerts
             .iter()
             .enumerate()

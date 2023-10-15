@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use gemini_engine::elements::view::{utils, ColChar, Point, Vec2D, ViewElement};
+use gemini_engine::elements::view::{utils, ColChar, Pixel, Vec2D, ViewElement};
 mod block_data;
+pub mod block_manipulation;
 use block_data::BlockData;
 use rand::seq::SliceRandom;
 
@@ -100,7 +101,7 @@ impl Clone for Block {
 }
 
 impl ViewElement for Block {
-    fn active_pixels(&self) -> Vec<Point> {
+    fn active_pixels(&self) -> Vec<Pixel> {
         let rotation_states = self.block_shape.get_rotation_states();
         let block_colour = match self.is_ghost {
             true => ColChar::BACKGROUND, // .with_mod(Modifier::Colour(Colour::greyscale(255)))
