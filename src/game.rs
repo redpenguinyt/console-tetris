@@ -17,9 +17,10 @@ use gemini_engine::{
 };
 mod alerts;
 mod blocks;
+mod borders;
 mod pause;
 use alerts::AlertDisplay;
-use blocks::{Block, BlockType, block_manipulation as tetris_core};
+use blocks::{block_manipulation as tetris_core, Block, BlockType};
 use pause::pause;
 use rand::Rng;
 
@@ -57,7 +58,7 @@ impl Game {
             ghost_block: Block::DEFAULT,
             held_piece: None,
             has_held: false,
-            game_boundaries: super::generate_borders(),
+            game_boundaries: borders::generate_borders(),
             stationary_blocks: PixelContainer::new(),
             bag: BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec(),
             placing_cooldown: block_place_cooldown,
@@ -107,7 +108,7 @@ impl MainLoopRoot for Game {
                 } => {
                     self.view.clear();
                     self.view.display_render().unwrap();
-                    pause()
+                    pause();
                 }
 
                 KeyEvent {
@@ -215,7 +216,8 @@ impl MainLoopRoot for Game {
                         println!("Game over!\r");
                         exit_raw_mode()
                     }
-                    let cleared_lines = tetris_core::clear_filled_lines(&mut self.stationary_blocks);
+                    let cleared_lines =
+                        tetris_core::clear_filled_lines(&mut self.stationary_blocks);
                     let mut alert = generate_alert_for_filled_lines(cleared_lines);
                     if let Some(t_spin_alert) = tetris_core::handle_t_spin(
                         &CollisionContainer::from(vec![&pre_clear_blocks as _]),

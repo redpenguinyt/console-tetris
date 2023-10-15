@@ -20,5 +20,6 @@ fn main() {
         PIECE_PREVIEW_COUNT,
         CONTROLS_HELP_TEXT,
     );
+
     game.main_loop(FPS);
 }

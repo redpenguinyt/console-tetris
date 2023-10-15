@@ -1,5 +1,5 @@
 use console_input::keypress::exit_raw_mode;
-use crossterm::event::{KeyEvent, KeyEventKind, KeyCode, KeyModifiers, Event, read};
+use crossterm::event::{read, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 // TODO: make use of console-input here
 pub fn pause() {
