@@ -1,6 +1,7 @@
 use console_input::keypress::enable_raw_mode;
 use gemini_engine::gameloop::MainLoopRoot;
-use tetris::Game;
+mod game;
+use game::Game;
 
 const FPS: f32 = 60.0;
 const BLOCK_PLACE_COOLDOWN: u32 = 30;
