@@ -4,7 +4,7 @@ use gemini_engine::elements::{
     Pixel, Text, Vec2D,
 };
 
-const ALERT_LIFETIME: u16 = 12;
+const ALERT_LIFETIME: u16 = 20;
 
 pub fn generate_alert_for_filled_lines(cleared_lines: isize) -> Option<(isize, String)> {
     match cleared_lines {

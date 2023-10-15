@@ -11,37 +11,29 @@ use gemini_engine::{
     elements::{
         containers::CollisionContainer,
         view::{ColChar, Modifier, Wrapping},
-        PixelContainer, Sprite, Text, Vec2D, View,
+        Sprite, Text, Vec2D, View,
     },
     gameloop::MainLoopRoot,
 };
 mod alerts;
-mod blocks;
-mod borders;
+mod block_manager;
+mod collision_manager;
 mod pause;
 use alerts::AlertDisplay;
-use blocks::{block_manipulation as tetris_core, Block, BlockType};
+use block_manager::{tetris_core, Block, BlockManager};
+use collision_manager::CollisionManager;
 use pause::pause;
-use rand::Rng;
 
 use self::alerts::generate_alert_for_filled_lines;
 
 pub struct Game {
     view: View,
     alert_display: AlertDisplay,
-    active_block: Option<Block>,
-    ghost_block: Block,
-    held_piece: Option<BlockType>,
-    has_held: bool,
-    game_boundaries: PixelContainer,
-    stationary_blocks: PixelContainer,
-    bag: Vec<BlockType>,
-    placing_cooldown: u32,
+    block_manager: BlockManager,
+    collision_manager: CollisionManager,
     score: isize,
     t: usize,
     // Constants
-    block_place_cooldown: u32,
-    piece_preview_count: usize,
     controls_help_text: String,
 }
 
@@ -54,19 +46,11 @@ impl Game {
         Game {
             view: View::new(50, 21, ColChar::EMPTY),
             alert_display: AlertDisplay::new(Vec2D::new(12, 7)),
-            active_block: None,
-            ghost_block: Block::DEFAULT,
-            held_piece: None,
-            has_held: false,
-            game_boundaries: borders::generate_borders(),
-            stationary_blocks: PixelContainer::new(),
-            bag: BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec(),
-            placing_cooldown: block_place_cooldown,
+            block_manager: BlockManager::new(block_place_cooldown, piece_preview_count),
+            collision_manager: CollisionManager::new(),
             score: 0,
             t: 0,
             // Constants
-            block_place_cooldown,
-            piece_preview_count,
             controls_help_text: controls_help_text.to_string(),
         }
     }
@@ -78,25 +62,9 @@ impl MainLoopRoot for Game {
     fn frame(&mut self, input_data: Option<Self::InputDataType>) {
         let mut block_speed = 12;
 
-        let collision = CollisionContainer::from(vec![
-            &self.game_boundaries as _,
-            &self.stationary_blocks as _,
-        ]);
+        let collision = self.collision_manager.get();
 
-        let mut block = match self.active_block {
-            Some(ref block) => block.clone(),
-            None => {
-                let next_piece = self.bag.pop().unwrap();
-                if self.bag.len() <= self.piece_preview_count {
-                    let mut new_bag = BlockType::bag().to_vec();
-                    new_bag.extend(&self.bag);
-                    self.bag.clear();
-                    self.bag.extend(new_bag);
-                }
-
-                Block::new(next_piece)
-            }
-        };
+        let mut block = self.block_manager.get_or_spawn_block();
 
         // Handle user input
         if let Some(Event::Key(key_event)) = input_data {
@@ -117,7 +85,7 @@ impl MainLoopRoot for Game {
                     ..
                 } => {
                     if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(-1, 0)) {
-                        self.placing_cooldown = self.block_place_cooldown;
+                        self.block_manager.reset_placing_cooldown();
                     }
                 }
 
@@ -127,7 +95,7 @@ impl MainLoopRoot for Game {
                     ..
                 } => {
                     if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(1, 0)) {
-                        self.placing_cooldown = self.block_place_cooldown;
+                        self.block_manager.reset_placing_cooldown();
                     }
                 }
 
@@ -137,7 +105,7 @@ impl MainLoopRoot for Game {
                     ..
                 } => {
                     if tetris_core::try_rotate_block(&collision, &mut block, false) {
-                        self.placing_cooldown = self.block_place_cooldown;
+                        self.block_manager.reset_placing_cooldown();
                     }
                 }
 
@@ -147,7 +115,7 @@ impl MainLoopRoot for Game {
                     ..
                 } => {
                     if tetris_core::try_rotate_block(&collision, &mut block, true) {
-                        self.placing_cooldown = self.block_place_cooldown;
+                        self.block_manager.reset_placing_cooldown();
                     }
                 }
 
@@ -162,11 +130,12 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    self.ghost_block = tetris_core::generate_ghost_block(&collision, &block);
-                    self.score += self.ghost_block.pos.y - block.pos.y;
-                    block = self.ghost_block.clone();
+                    self.block_manager.ghost_block =
+                        tetris_core::generate_ghost_block(&collision, &block);
+                    self.score += self.block_manager.ghost_block.pos.y - block.pos.y;
+                    block = self.block_manager.ghost_block.clone();
                     self.t = block_speed - 1;
-                    self.placing_cooldown = 1;
+                    self.block_manager.placing_cooldown = 1;
                 }
 
                 KeyEvent {
@@ -175,17 +144,8 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if !self.has_held {
-                        let current_held_piece = self.held_piece;
-                        self.held_piece = Some(block.block_shape);
-                        match current_held_piece {
-                            Some(piece) => block = Block::new(piece),
-                            None => {
-                                self.active_block = None;
-                                return;
-                            }
-                        }
-                        self.has_held = true;
+                    if self.block_manager.hold(&mut block) {
+                        return;
                     }
                 }
 
@@ -193,32 +153,35 @@ impl MainLoopRoot for Game {
             }
         }
 
-        self.ghost_block = tetris_core::generate_ghost_block(&collision, &block);
+        self.block_manager.generate_ghost_block(&collision, &block);
 
         let is_above_block = collision.will_overlap_element(&block, Vec2D::new(0, 1));
 
         self.t += 1;
-        self.active_block = if self.t % block_speed == 0 || is_above_block {
+        self.block_manager.active_block = if self.t % block_speed == 0 || is_above_block {
             if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
                 if block_speed == 2 {
                     self.score += 1;
                 }
                 Some(block)
             } else {
-                self.placing_cooldown -= 1;
-                if self.placing_cooldown == 0 {
+                self.block_manager.placing_cooldown -= 1;
+                if self.block_manager.placing_cooldown == 0 {
                     // Placing a block
-                    let pre_clear_blocks = self.stationary_blocks.clone();
-                    self.placing_cooldown = self.block_place_cooldown;
-                    self.has_held = false;
-                    self.stationary_blocks.blit(&block);
+                    let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
+                    self.block_manager.reset_placing_cooldown();
+                    self.block_manager.has_held = false;
+                    self.collision_manager.stationary_blocks.blit(&block);
                     if block.pos.y < 1 {
                         println!("Game over!\r");
                         exit_raw_mode()
                     }
-                    let cleared_lines =
-                        tetris_core::clear_filled_lines(&mut self.stationary_blocks);
+                    let cleared_lines = tetris_core::clear_filled_lines(
+                        &mut self.collision_manager.stationary_blocks,
+                    );
+
                     let mut alert = generate_alert_for_filled_lines(cleared_lines);
+
                     if let Some(t_spin_alert) = tetris_core::handle_t_spin(
                         &CollisionContainer::from(vec![&pre_clear_blocks as _]),
                         &block,
@@ -241,12 +204,12 @@ impl MainLoopRoot for Game {
     fn render_frame(&mut self) {
         self.view.clear();
         self.view
-            .blit_double_width(&self.game_boundaries, Wrapping::Panic);
+            .blit_double_width(&self.collision_manager.game_boundaries, Wrapping::Panic);
         self.view
-            .blit_double_width(&self.stationary_blocks, Wrapping::Ignore);
+            .blit_double_width(&self.collision_manager.stationary_blocks, Wrapping::Ignore);
         self.view
-            .blit_double_width(&self.ghost_block, Wrapping::Ignore);
-        if let Some(ref block) = self.active_block {
+            .blit_double_width(&self.block_manager.ghost_block, Wrapping::Ignore);
+        if let Some(ref block) = self.block_manager.active_block {
             self.view.blit_double_width(block, Wrapping::Ignore);
         }
 
@@ -255,16 +218,11 @@ impl MainLoopRoot for Game {
             &Text::new(Vec2D::new(29, 9), "Next:", Modifier::None),
             Wrapping::Panic,
         );
-
-        for i in 0..self.piece_preview_count {
-            let mut next_block_display = Block::new(self.bag[self.bag.len() - i - 1]);
-            next_block_display.pos = Vec2D::new(15, 12 + i as isize * 3);
-            self.view
-                .blit_double_width(&next_block_display, Wrapping::Ignore);
-        }
+        self.view
+            .blit_double_width(&self.block_manager.next_piece_display(), Wrapping::Ignore);
 
         // Held piece display
-        if let Some(piece) = self.held_piece {
+        if let Some(piece) = self.block_manager.held_piece {
             self.view.blit(
                 &Text::new(Vec2D::new(29, 1), "Hold", Modifier::None),
                 Wrapping::Panic,

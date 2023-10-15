@@ -3,7 +3,7 @@ use gemini_engine::gameloop::MainLoopRoot;
 use tetris::Game;
 
 const FPS: f32 = 60.0;
-const BLOCK_PLACE_COOLDOWN: u32 = 15;
+const BLOCK_PLACE_COOLDOWN: u32 = 30;
 const PIECE_PREVIEW_COUNT: usize = 3;
 const CONTROLS_HELP_TEXT: &str = "Controls:
 C to hold
