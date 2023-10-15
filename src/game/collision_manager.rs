@@ -1,5 +1,7 @@
 use gemini_engine::elements::{
-    containers::CollisionContainer, view::{ColChar, ViewElement}, PixelContainer, Rect, Vec2D,
+    containers::CollisionContainer,
+    view::{ColChar, ViewElement},
+    PixelContainer, Rect, Vec2D,
 };
 
 pub fn generate_borders() -> PixelContainer {
@@ -48,5 +50,71 @@ impl CollisionManager {
 
     pub fn blit<E: ViewElement>(&mut self, element: &E) {
         self.stationary_blocks.blit(element)
+    }
+
+    // Remove all filled lines and return the number of lines filled and removed
+    pub fn clear_filled_lines(&mut self) -> isize {
+        let mut pixels = self.stationary_blocks.pixels.clone();
+        if pixels.is_empty() {
+            return 0;
+        }
+
+        let mut cleared_lines = 0;
+
+        let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
+        let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
+
+        'row: for y in min_y..=max_y {
+            let row_pixels: Vec<isize> = pixels
+                .iter()
+                .filter(|p| p.pos.y == y)
+                .map(|p| p.pos.x)
+                .collect();
+
+            for x in 1..11 {
+                if !row_pixels.contains(&x) {
+                    continue 'row;
+                }
+            }
+
+            cleared_lines += 1;
+            pixels.retain(|p| p.pos.y != y);
+        }
+
+        let mut y = max_y + 1;
+        loop {
+            y -= 1;
+            if y < min_y {
+                break;
+            }
+
+            let row_pixels: Vec<isize> = pixels
+                .iter()
+                .filter(|p| p.pos.y == y)
+                .map(|p| p.pos.x)
+                .collect();
+
+            if row_pixels.is_empty() {
+                pixels = pixels
+                    .iter()
+                    .map(|p| {
+                        if p.pos.y < y {
+                            let mut moved_p = *p;
+                            moved_p.pos.y += 1;
+                            moved_p
+                        } else {
+                            *p
+                        }
+                    })
+                    .collect();
+
+                y += 1;
+                min_y += 1;
+            }
+        }
+
+        self.stationary_blocks.pixels = pixels;
+
+        cleared_lines
     }
 }

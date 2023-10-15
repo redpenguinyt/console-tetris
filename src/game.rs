@@ -20,7 +20,7 @@ mod block_manager;
 mod collision_manager;
 mod pause;
 use alerts::AlertDisplay;
-use block_manager::{tetris_core, BlockManager};
+use block_manager::{BlockManager, tetris_core};
 use collision_manager::CollisionManager;
 use pause::pause;
 
@@ -64,8 +64,6 @@ impl MainLoopRoot for Game {
 
         let collision = self.collision_manager.get();
 
-        let mut block = self.block_manager.get_or_spawn_block();
-
         // Handle user input
         if let Some(Event::Key(key_event)) = input_data {
             match key_event {
@@ -84,7 +82,7 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(-1, 0)) {
+                    if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(-1, 0)) {
                         self.block_manager.reset_placing_cooldown();
                     }
                 }
@@ -94,7 +92,7 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(1, 0)) {
+                    if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(1, 0)) {
                         self.block_manager.reset_placing_cooldown();
                     }
                 }
@@ -104,7 +102,7 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if tetris_core::try_rotate_block(&collision, &mut block, false) {
+                    if tetris_core::try_rotate_block(&collision, &mut self.block_manager.block, false) {
                         self.block_manager.reset_placing_cooldown();
                     }
                 }
@@ -114,7 +112,7 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if tetris_core::try_rotate_block(&collision, &mut block, true) {
+                    if tetris_core::try_rotate_block(&collision, &mut self.block_manager.block, true) {
                         self.block_manager.reset_placing_cooldown();
                     }
                 }
@@ -130,10 +128,9 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    self.block_manager.ghost_block =
-                        tetris_core::generate_ghost_block(&collision, &block);
-                    self.score += self.block_manager.ghost_block.pos.y - block.pos.y;
-                    block = self.block_manager.ghost_block.clone();
+                    self.block_manager.generate_ghost_block(&collision);
+                    self.score += self.block_manager.ghost_block.pos.y - self.block_manager.block.pos.y;
+                    self.block_manager.block = self.block_manager.ghost_block.clone();
                     self.t = block_speed - 1;
                     self.block_manager.placing_cooldown = 1;
                 }
@@ -144,7 +141,7 @@ impl MainLoopRoot for Game {
                     kind: KeyEventKind::Press,
                     ..
                 } => {
-                    if self.block_manager.hold(&mut block) {
+                    if self.block_manager.hold() {
                         return;
                     }
                 }
@@ -153,17 +150,16 @@ impl MainLoopRoot for Game {
             }
         }
 
-        self.block_manager.generate_ghost_block(&collision, &block);
+        self.block_manager.generate_ghost_block(&collision);
 
-        let is_above_block = collision.will_overlap_element(&block, Vec2D::new(0, 1));
+        let is_above_block = collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1));
 
         self.t += 1;
-        self.block_manager.active_block = if self.t % block_speed == 0 || is_above_block {
-            if tetris_core::try_move_block(&collision, &mut block, Vec2D::new(0, 1)) {
+        if self.t % block_speed == 0 || is_above_block {
+            if tetris_core::try_move_block(&collision, &mut self.block_manager.block, Vec2D::new(0, 1)) {
                 if block_speed == 2 {
                     self.score += 1;
                 }
-                Some(block)
             } else {
                 self.block_manager.placing_cooldown -= 1;
                 if self.block_manager.placing_cooldown == 0 {
@@ -172,33 +168,28 @@ impl MainLoopRoot for Game {
 
                     self.block_manager.reset_placing_cooldown();
                     self.block_manager.has_held = false;
-                    self.collision_manager.blit(&block);
-                    if block.pos.y < 1 {
+                    self.collision_manager.blit(&self.block_manager.block);
+                    if self.block_manager.block.pos.y < 1 {
                         println!("Game over!\r");
                         exit_raw_mode()
                     }
 
+                    let cleared_lines = self.collision_manager.clear_filled_lines();
+
                     // Generate alert
-                    let cleared_lines = tetris_core::clear_filled_lines(
-                        &mut self.collision_manager.stationary_blocks,
-                    );
                     let mut alert = generate_alert_for_filled_lines(cleared_lines);
                     if let Some(t_spin_alert) = tetris_core::handle_t_spin(
                         &CollisionContainer::from(vec![&pre_clear_blocks as _]),
-                        &block,
+                        &self.block_manager.block,
                         cleared_lines,
                     ) {
                         alert = Some(t_spin_alert)
                     }
                     self.alert_display.handle_with_score(&mut self.score, alert);
-                    None
-                } else {
-                    Some(block)
+                    self.block_manager.generate_new_block();
                 }
             }
-        } else {
-            Some(block)
-        };
+        }
     }
 
     fn render_frame(&mut self) {
@@ -209,9 +200,7 @@ impl MainLoopRoot for Game {
 
         self.view
             .blit_double_width(&self.block_manager.ghost_block, Wrapping::Ignore);
-        if let Some(ref block) = self.block_manager.active_block {
-            self.view.blit_double_width(block, Wrapping::Ignore);
-        }
+        self.view.blit_double_width(&self.block_manager.block, Wrapping::Ignore);
 
         // Next piece display
         self.view.blit(

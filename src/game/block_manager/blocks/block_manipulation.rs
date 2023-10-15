@@ -1,7 +1,6 @@
-use gemini_engine::elements::{containers::CollisionContainer, Vec2D, view::{utils, ViewElement}, PixelContainer};
+use gemini_engine::elements::{containers::CollisionContainer, Vec2D, view::{utils, ViewElement}};
 
 use super::{Block, BlockType};
-
 
 pub fn try_move_block(collision: &CollisionContainer, block: &mut Block, offset: Vec2D) -> bool {
     let did_move = !collision.will_overlap_element(block, offset);
@@ -37,80 +36,6 @@ pub fn try_rotate_block(
     }
 
     did_move
-}
-
-pub fn generate_ghost_block(collision: &CollisionContainer, block: &Block) -> Block {
-    let mut ghost_block = block.clone();
-    ghost_block.is_ghost = true;
-
-    while try_move_block(collision, &mut ghost_block, Vec2D::new(0, 1)) {}
-
-    ghost_block
-}
-
-pub fn clear_filled_lines(blocks: &mut PixelContainer) -> isize {
-    let mut pixels = blocks.pixels.clone();
-    if pixels.is_empty() {
-        return 0;
-    }
-
-    let mut cleared_lines = 0;
-
-    let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
-    let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
-
-    'row: for y in min_y..=max_y {
-        let row_pixels: Vec<isize> = pixels
-            .iter()
-            .filter(|p| p.pos.y == y)
-            .map(|p| p.pos.x)
-            .collect();
-
-        for x in 1..11 {
-            if !row_pixels.contains(&x) {
-                continue 'row;
-            }
-        }
-
-        cleared_lines += 1;
-        pixels.retain(|p| p.pos.y != y);
-    }
-
-    let mut y = max_y + 1;
-    loop {
-        y -= 1;
-        if y < min_y {
-            break;
-        }
-
-        let row_pixels: Vec<isize> = pixels
-            .iter()
-            .filter(|p| p.pos.y == y)
-            .map(|p| p.pos.x)
-            .collect();
-
-        if row_pixels.is_empty() {
-            pixels = pixels
-                .iter()
-                .map(|p| {
-                    if p.pos.y < y {
-                        let mut moved_p = *p;
-                        moved_p.pos.y += 1;
-                        moved_p
-                    } else {
-                        *p
-                    }
-                })
-                .collect();
-
-            y += 1;
-            min_y += 1;
-        }
-    }
-
-    blocks.pixels = pixels;
-
-    cleared_lines
 }
 
 pub fn handle_t_spin(
