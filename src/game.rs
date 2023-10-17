@@ -131,7 +131,7 @@ impl MainLoopRoot for Game {
                 .block_manager
                 .try_move_block(&collision, Vec2D::new(0, 1))
             {
-                // increase the score by one if soft holding
+                // increase the score by one if soft dropping
                 if block_speed == 2 {
                     self.score += 1;
                 }
