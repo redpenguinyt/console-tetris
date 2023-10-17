@@ -35,6 +35,15 @@ impl BlockManager {
         self.placing_cooldown = self.block_place_cooldown;
     }
 
+    /// Call when a block is placed
+    ///
+    /// Returns true if the block is placed at the very top of the board, indicating a lost game
+    pub fn reset(&mut self) -> bool {
+        self.reset_placing_cooldown();
+        self.has_held = false;
+        self.block.pos.y < 1
+    }
+
     pub fn generate_new_block(&mut self) {
         let next_piece = self.bag.pop().unwrap();
         if self.bag.len() <= self.piece_preview_count {
@@ -86,6 +95,11 @@ impl BlockManager {
         while tetris_core::try_move_block(collision, &mut ghost_block, Vec2D::new(0, 1)) {}
 
         self.ghost_block = ghost_block
+    }
+
+    /// Generate an appropriate alert
+    pub fn check_for_t_spin(&self, collision: &CollisionContainer, cleared_lines: isize) -> Option<(isize, String)> {
+        tetris_core::handle_t_spin(collision, &self.block, cleared_lines)
     }
 
     pub fn next_piece_display(&self) -> PixelContainer {

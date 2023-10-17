@@ -117,4 +117,12 @@ impl CollisionManager {
 
         cleared_lines
     }
+
+    /// Add an element to the stationary blocks and clear all full lines
+    ///
+    /// Returns the number of cleared lines
+    pub fn blit_and_clear_lines<E: ViewElement>(&mut self, block: &E) -> isize {
+        self.blit(block);
+        self.clear_filled_lines()
+    }
 }

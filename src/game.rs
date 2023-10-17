@@ -20,7 +20,7 @@ mod block_manager;
 mod collision_manager;
 mod pause;
 use alerts::AlertDisplay;
-use block_manager::{tetris_core, BlockManager};
+use block_manager::BlockManager;
 use collision_manager::CollisionManager;
 use pause::pause;
 
@@ -131,35 +131,31 @@ impl MainLoopRoot for Game {
                 .block_manager
                 .try_move_block(&collision, Vec2D::new(0, 1))
             {
+                // increase the score by one if soft holding
                 if block_speed == 2 {
                     self.score += 1;
                 }
             } else {
+                // If the block's way down is blocked...
                 self.block_manager.placing_cooldown -= 1;
                 if self.block_manager.placing_cooldown == 0 {
-                    // Placing a block
                     let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
 
-                    self.block_manager.reset_placing_cooldown();
-                    self.block_manager.has_held = false;
-                    self.collision_manager.blit(&self.block_manager.block);
-                    if self.block_manager.block.pos.y < 1 {
+                    if self.block_manager.reset() {
                         println!("Game over!\r");
                         exit_raw_mode()
                     }
 
-                    let cleared_lines = self.collision_manager.clear_filled_lines();
+                    let cleared_lines = self.collision_manager.blit_and_clear_lines(&self.block_manager.block);
 
-                    // Generate alert
-                    let mut alert = generate_alert_for_filled_lines(cleared_lines);
-                    if let Some(t_spin_alert) = tetris_core::handle_t_spin(
+                    self.alert_display.priorised_alerts_with_score(&[
+                        self.block_manager.check_for_t_spin(
                         &CollisionContainer::from(vec![&pre_clear_blocks as _]),
-                        &self.block_manager.block,
-                        cleared_lines,
-                    ) {
-                        alert = Some(t_spin_alert)
-                    }
-                    self.alert_display.handle_with_score(&mut self.score, alert);
+                        cleared_lines
+                        ),
+                        generate_alert_for_filled_lines(cleared_lines)
+                    ], &mut self.score);
+
                     self.block_manager.generate_new_block();
                 }
             }
