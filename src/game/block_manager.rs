@@ -91,8 +91,7 @@ impl BlockManager {
     pub fn next_piece_display(&self) -> PixelContainer {
         let mut container = PixelContainer::new();
         for i in 0..self.piece_preview_count {
-            let mut next_block_display =
-                Block::new(self.bag[self.bag.len() - i - 1]);
+            let mut next_block_display = Block::new(self.bag[self.bag.len() - i - 1]);
             next_block_display.pos = Vec2D::new(15, 12 + i as isize * 3);
             container.blit(&next_block_display);
         }

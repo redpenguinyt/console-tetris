@@ -1,4 +1,8 @@
-use gemini_engine::elements::{containers::CollisionContainer, Vec2D, view::{utils, ViewElement}};
+use gemini_engine::elements::{
+    containers::CollisionContainer,
+    view::{utils, ViewElement},
+    Vec2D,
+};
 
 use super::{Block, BlockType};
 
