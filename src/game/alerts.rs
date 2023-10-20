@@ -46,7 +46,11 @@ impl AlertDisplay {
     }
 
     /// Will pick the first existing alert score pair and run `handle_with_score` on that
-    pub fn priorised_alerts_with_score(&mut self, alert_score_pairs: &[Option<(isize, String)>], score: &mut isize) {
+    pub fn priorised_alerts_with_score(
+        &mut self,
+        alert_score_pairs: &[Option<(isize, String)>],
+        score: &mut isize,
+    ) {
         for score_alert_pair in alert_score_pairs {
             if score_alert_pair.is_some() {
                 self.handle_with_score(score, score_alert_pair.clone());
