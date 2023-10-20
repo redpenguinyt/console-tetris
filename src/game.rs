@@ -168,6 +168,7 @@ impl MainLoopRoot for Game {
     fn render_frame(&mut self) {
         self.view.clear();
 
+        // Blit the walls and stationary blocks
         self.view
             .blit_double_width(&self.collision_manager.get(), Wrapping::Ignore);
 
