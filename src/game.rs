@@ -126,38 +126,40 @@ impl MainLoopRoot for Game {
             collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1));
 
         self.t += 1;
-        if self.t % block_speed == 0 || is_above_block {
-            if self
-                .block_manager
-                .try_move_block(&collision, Vec2D::new(0, 1))
-            {
-                // increase the score by one if soft dropping
-                if block_speed == 2 {
-                    self.score += 1;
+        if is_above_block {
+            // If the block's way down is blocked...
+            self.block_manager.placing_cooldown -= 1;
+            if self.block_manager.placing_cooldown == 0 {
+                let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
+
+                if self.block_manager.reset() {
+                    println!("Game over!\r");
+                    exit_raw_mode()
                 }
-            } else {
-                // If the block's way down is blocked...
-                self.block_manager.placing_cooldown -= 1;
-                if self.block_manager.placing_cooldown == 0 {
-                    let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
 
-                    if self.block_manager.reset() {
-                        println!("Game over!\r");
-                        exit_raw_mode()
-                    }
+                let cleared_lines = self
+                    .collision_manager
+                    .blit_and_clear_lines(&self.block_manager.block);
 
-                    let cleared_lines = self.collision_manager.blit_and_clear_lines(&self.block_manager.block);
-
-                    self.alert_display.priorised_alerts_with_score(&[
+                self.alert_display.priorised_alerts_with_score(
+                    &[
                         self.block_manager.check_for_t_spin(
-                        &CollisionContainer::from(vec![&pre_clear_blocks as _]),
-                        cleared_lines
+                            &CollisionContainer::from(vec![&pre_clear_blocks as _]),
+                            cleared_lines,
                         ),
-                        generate_alert_for_filled_lines(cleared_lines)
-                    ], &mut self.score);
+                        generate_alert_for_filled_lines(cleared_lines),
+                    ],
+                    &mut self.score,
+                );
 
-                    self.block_manager.generate_new_block();
-                }
+                self.block_manager.generate_new_block();
+            }
+        } else if self.t % block_speed == 0 {
+            // move down and increase score for soft drop
+            self.block_manager
+                .try_move_block(&collision, Vec2D::new(0, 1));
+            if block_speed == 2 {
+                self.score += 1;
             }
         }
     }
