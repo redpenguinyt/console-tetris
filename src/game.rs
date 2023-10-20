@@ -60,11 +60,13 @@ impl MainLoopRoot for Game {
     type InputDataType = Event;
 
     fn frame(&mut self, input_data: Option<Self::InputDataType>) {
+        self.t += 1;
         let mut block_speed = 12;
 
+        // Generate a collision with the current walls and placed blocks
         let collision = self.collision_manager.get();
 
-        // If the event is a keypres...
+        // Handle Inputs
         if let Some(Event::Key(KeyEvent {
             code,
             kind: KeyEventKind::Press,
@@ -106,7 +108,6 @@ impl MainLoopRoot for Game {
 
                 // Hard drop
                 KeyCode::Char(' ') => {
-                    self.block_manager.generate_ghost_block(&collision);
                     self.score +=
                         self.block_manager.ghost_block.pos.y - self.block_manager.block.pos.y;
                     self.block_manager.block = self.block_manager.ghost_block.clone();
@@ -120,18 +121,17 @@ impl MainLoopRoot for Game {
             }
         }
 
+        // Place the ghost block directly beneath the active block
         self.block_manager.generate_ghost_block(&collision);
 
-        let is_above_block =
-            collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1));
-
-        self.t += 1;
-        if is_above_block {
+        // If the active block is on the floor...
+        if collision.will_overlap_element(&self.block_manager.block, Vec2D::new(0, 1)) {
             // If the block's way down is blocked...
             self.block_manager.placing_cooldown -= 1;
             if self.block_manager.placing_cooldown == 0 {
                 let pre_clear_blocks = self.collision_manager.stationary_blocks.clone();
 
+                // If the current block is at the very top of the board...
                 if self.block_manager.reset() {
                     println!("Game over!\r");
                     exit_raw_mode()
@@ -141,6 +141,7 @@ impl MainLoopRoot for Game {
                     .collision_manager
                     .blit_and_clear_lines(&self.block_manager.block);
 
+                // Display an appropriate alert
                 self.alert_display.priorised_alerts_with_score(
                     &[
                         self.block_manager.check_for_t_spin(
