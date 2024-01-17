@@ -7,6 +7,6 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.27.0"
-gemini-engine = "0.8.4"
+gemini-engine = "0.11.3"
 console-input = "0.1.1"
 rand = "0.8.5"
