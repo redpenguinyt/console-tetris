@@ -48,7 +48,7 @@ pub fn handle_t_spin(
     cleared_lines: isize,
 ) -> Option<(isize, String)> {
     if block.shape == BlockType::T {
-        let collision_pixels = utils::pixels_to_points(collision.active_pixels());
+        let collision_pixels = utils::pixels_to_points(&collision.active_pixels());
 
         let positions_to_check: Vec<Vec2D> = [
             Vec2D::new(1, 1),   // Top-left

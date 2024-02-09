@@ -7,8 +7,8 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.27.0"
-gemini-engine = "0.11.3"
-console-input = "0.1.1"
+gemini-engine = "0.14.0"
+console-input = "0.1.2"
 rand = "0.8.5"
 
 [lints.rust]
