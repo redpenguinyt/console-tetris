@@ -53,7 +53,7 @@ impl BlockType {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Block {
     pub pos: Vec2D,
     pub shape: BlockType,
@@ -89,16 +89,16 @@ impl Block {
     }
 }
 
-// impl Clone for Block {
-//     fn clone(&self) -> Self {
-//         Self {
-//             pos: self.pos,
-//             shape: self.shape,
-//             rotation: self.rotation,
-//             is_ghost: false,
-//         }
-//     }
-// }
+impl Clone for Block {
+    fn clone(&self) -> Self {
+        Self {
+            pos: self.pos,
+            shape: self.shape,
+            rotation: self.rotation,
+            is_ghost: false,
+        }
+    }
+}
 
 impl ViewElement for Block {
     fn active_pixels(&self) -> Vec<Pixel> {
