@@ -16,8 +16,8 @@ pub struct BlockManager {
 }
 
 impl BlockManager {
-    pub fn new(block_place_cooldown: u32, piece_preview_count: usize) -> BlockManager {
-        let mut tmp = BlockManager {
+    pub fn new(block_place_cooldown: u32, piece_preview_count: usize) -> Self {
+        let mut tmp = Self {
             bag: BlockType::bag()[0..rand::thread_rng().gen_range(1..8)].to_vec(),
             block: Block::DEFAULT,
             ghost_block: Block::DEFAULT,
@@ -45,7 +45,7 @@ impl BlockManager {
     }
 
     pub fn generate_new_block(&mut self) {
-        let next_piece = self.bag.pop().unwrap();
+        let next_piece = self.bag.pop().unwrap_or_else(|| unreachable!());
         if self.bag.len() <= self.piece_preview_count {
             let mut new_bag = BlockType::bag().to_vec();
             new_bag.extend(&self.bag);
@@ -77,7 +77,7 @@ impl BlockManager {
     pub fn hold(&mut self) {
         if !self.has_held {
             let current_held_piece = self.held_piece;
-            self.held_piece = Some(self.block.block_shape);
+            self.held_piece = Some(self.block.shape);
             match current_held_piece {
                 Some(piece) => self.block = Block::new(piece),
                 None => {
@@ -94,7 +94,7 @@ impl BlockManager {
 
         while tetris_core::try_move_block(collision, &mut ghost_block, Vec2D::new(0, 1)) {}
 
-        self.ghost_block = ghost_block
+        self.ghost_block = ghost_block;
     }
 
     /// Generate an appropriate alert
@@ -117,7 +117,7 @@ impl BlockManager {
         container
     }
 
-    pub fn held_piece_display(&self) -> Option<Block> {
+    pub const fn held_piece_display(&self) -> Option<Block> {
         if let Some(piece) = self.held_piece {
             let mut held_block_display = Block::new(piece);
             held_block_display.pos = Vec2D::new(15, 4);

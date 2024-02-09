@@ -23,15 +23,15 @@ pub struct AlertDisplay {
 }
 
 impl AlertDisplay {
-    pub fn new(pos: Vec2D) -> AlertDisplay {
-        AlertDisplay {
+    pub const fn new(pos: Vec2D) -> Self {
+        Self {
             pos,
             alerts: vec![],
         }
     }
 
     pub fn push(&mut self, alert: &str) {
-        self.alerts.push((String::from(alert), ALERT_LIFETIME))
+        self.alerts.push((String::from(alert), ALERT_LIFETIME));
     }
 
     pub fn handle_with_score(

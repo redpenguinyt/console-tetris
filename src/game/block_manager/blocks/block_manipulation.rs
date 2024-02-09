@@ -9,7 +9,7 @@ use super::{Block, BlockType};
 pub fn try_move_block(collision: &CollisionContainer, block: &mut Block, offset: Vec2D) -> bool {
     let did_move = !collision.will_overlap_element(block, offset);
     if did_move {
-        block.pos += offset
+        block.pos += offset;
     }
 
     did_move
@@ -20,7 +20,7 @@ pub fn try_rotate_block(
     block: &mut Block,
     clockwise: bool,
 ) -> bool {
-    if let BlockType::O = block.block_shape {
+    if block.shape == BlockType::O {
         return false;
     }
 
@@ -29,7 +29,7 @@ pub fn try_rotate_block(
     hypothetical_block.rotate(clockwise);
 
     let mut did_move = false;
-    for possible_offset in &block.block_shape.get_wall_kick_data()[&rotation_index] {
+    for possible_offset in &block.shape.get_wall_kick_data()[&rotation_index] {
         hypothetical_block.pos = block.pos + *possible_offset;
         if !collision.overlaps_element(&hypothetical_block) {
             did_move = true;
@@ -47,7 +47,7 @@ pub fn handle_t_spin(
     block: &Block,
     cleared_lines: isize,
 ) -> Option<(isize, String)> {
-    if let BlockType::T = block.block_shape {
+    if block.shape == BlockType::T {
         let collision_pixels = utils::pixels_to_points(collision.active_pixels());
 
         let positions_to_check: Vec<Vec2D> = [

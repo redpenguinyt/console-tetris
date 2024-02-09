@@ -13,14 +13,15 @@ impl BlockData {
         rotation_states: Vec<Vec<Vec2D>>,
         colour: Colour,
         wall_kick_data: HashMap<(usize, usize), Vec<Vec2D>>,
-    ) -> BlockData {
-        BlockData {
+    ) -> Self {
+        Self {
             rotation_states,
             colour,
             wall_kick_data,
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn get_wall_kick_data(block_shape: BlockType) -> HashMap<(usize, usize), Vec<Vec2D>> {
         match block_shape {
             BlockType::J | BlockType::L | BlockType::T | BlockType::S | BlockType::Z => {
@@ -195,9 +196,10 @@ impl BlockData {
 }
 
 impl From<BlockType> for BlockData {
+    #[allow(clippy::too_many_lines)]
     fn from(block_shape: BlockType) -> Self {
         match block_shape {
-            BlockType::O => BlockData::new(
+            BlockType::O => Self::new(
                 vec![vec![
                     Vec2D::new(0, 0),
                     Vec2D::new(1, 0),
@@ -205,9 +207,9 @@ impl From<BlockType> for BlockData {
                     Vec2D::new(1, -1),
                 ]],
                 Colour::rgb(255, 255, 0),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::I => BlockData::new(
+            BlockType::I => Self::new(
                 vec![
                     vec![
                         Vec2D::new(-1, 0),
@@ -235,9 +237,9 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(0, 255, 255),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::T => BlockData::new(
+            BlockType::T => Self::new(
                 vec![
                     vec![
                         Vec2D::new(0, -1),
@@ -265,9 +267,9 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(255, 0, 255),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::S => BlockData::new(
+            BlockType::S => Self::new(
                 vec![
                     vec![
                         Vec2D::new(-1, 0),
@@ -295,9 +297,9 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(0, 255, 0),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::Z => BlockData::new(
+            BlockType::Z => Self::new(
                 vec![
                     vec![
                         Vec2D::new(-1, -1),
@@ -325,9 +327,9 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(255, 0, 0),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::L => BlockData::new(
+            BlockType::L => Self::new(
                 vec![
                     vec![
                         Vec2D::new(-1, 0),
@@ -355,9 +357,9 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(255, 165, 0),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
-            BlockType::J => BlockData::new(
+            BlockType::J => Self::new(
                 vec![
                     vec![
                         Vec2D::new(-1, -1),
@@ -385,7 +387,7 @@ impl From<BlockType> for BlockData {
                     ],
                 ],
                 Colour::rgb(0, 0, 255),
-                BlockData::get_wall_kick_data(block_shape),
+                Self::get_wall_kick_data(block_shape),
             ),
         }
     }

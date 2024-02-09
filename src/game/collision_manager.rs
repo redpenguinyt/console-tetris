@@ -34,8 +34,8 @@ pub struct CollisionManager {
 }
 
 impl CollisionManager {
-    pub fn new() -> CollisionManager {
-        CollisionManager {
+    pub fn new() -> Self {
+        Self {
             game_boundaries: generate_borders(),
             stationary_blocks: PixelContainer::new(),
         }
@@ -49,7 +49,7 @@ impl CollisionManager {
     }
 
     pub fn blit<E: ViewElement>(&mut self, element: &E) {
-        self.stationary_blocks.blit(element)
+        self.stationary_blocks.blit(element);
     }
 
     // Remove all filled lines and return the number of lines filled and removed
@@ -61,8 +61,8 @@ impl CollisionManager {
 
         let mut cleared_lines = 0;
 
-        let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap();
-        let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap();
+        let mut min_y = pixels.iter().map(|p| p.pos.y).min().unwrap_or(0);
+        let max_y = pixels.iter().map(|p| p.pos.y).max().unwrap_or(0);
 
         'row: for y in min_y..=max_y {
             let row_pixels: Vec<isize> = pixels
@@ -88,13 +88,14 @@ impl CollisionManager {
                 break;
             }
 
-            let row_pixels: Vec<isize> = pixels
+            let is_row_empty: bool = pixels
                 .iter()
                 .filter(|p| p.pos.y == y)
                 .map(|p| p.pos.x)
-                .collect();
+                .next()
+                .is_none();
 
-            if row_pixels.is_empty() {
+            if is_row_empty {
                 pixels = pixels
                     .iter()
                     .map(|p| {

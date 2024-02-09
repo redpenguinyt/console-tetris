@@ -43,8 +43,8 @@ impl Game {
         block_place_cooldown: u32,
         piece_preview_count: usize,
         controls_help_text: &str,
-    ) -> Game {
-        Game {
+    ) -> Self {
+        Self {
             view: View::new(50, 21, ColChar::EMPTY),
             alert_display: AlertDisplay::new(Vec2D::new(12, 7)),
             block_manager: BlockManager::new(block_place_cooldown, piece_preview_count),
@@ -78,7 +78,7 @@ impl MainLoopRoot for Game {
                 // Pause
                 KeyCode::Esc => {
                     self.view.clear();
-                    self.view.display_render().unwrap();
+                    self.view.display_render().expect("Failed to clear screen");
                     pause();
                 }
 
@@ -135,7 +135,7 @@ impl MainLoopRoot for Game {
                 // If the current block is at the very top of the board...
                 if self.block_manager.reset() {
                     println!("Game over!\r");
-                    exit_raw_mode()
+                    exit_raw_mode();
                 }
 
                 let cleared_lines = self
@@ -187,13 +187,13 @@ impl MainLoopRoot for Game {
             .blit_double_width(&self.block_manager.next_piece_display(), Wrapping::Ignore);
 
         // Held piece display
-        if self.block_manager.held_piece.is_some() {
+        if let Some(held_piece) = self.block_manager.held_piece_display() {
             self.view.blit(
                 &Text::new(Vec2D::new(29, 1), "Hold", Modifier::None),
                 Wrapping::Panic,
             );
             self.view.blit_double_width(
-                &self.block_manager.held_piece_display().unwrap(),
+                &held_piece,
                 Wrapping::Ignore,
             );
         } else {
@@ -219,7 +219,7 @@ impl MainLoopRoot for Game {
 
         execute!(stdout(), MoveTo(0, 0)).unwrap();
         execute!(stdout(), Clear(ClearType::FromCursorDown)).unwrap();
-        self.view.display_render().unwrap();
+        self.view.display_render().expect("Failed to print render to screen");
     }
 
     fn sleep_and_get_input_data(
