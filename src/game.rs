@@ -192,10 +192,7 @@ impl MainLoopRoot for Game {
                 &Text::new(Vec2D::new(29, 1), "Hold", Modifier::None),
                 Wrapping::Panic,
             );
-            self.view.blit_double_width(
-                &held_piece,
-                Wrapping::Ignore,
-            );
+            self.view.blit_double_width(&held_piece, Wrapping::Ignore);
         } else {
             self.view.blit(
                 &Sprite::new(Vec2D::new(26, 0), &self.controls_help_text, Modifier::None),
@@ -219,7 +216,9 @@ impl MainLoopRoot for Game {
 
         execute!(stdout(), MoveTo(0, 0)).unwrap();
         execute!(stdout(), Clear(ClearType::FromCursorDown)).unwrap();
-        self.view.display_render().expect("Failed to print render to screen");
+        self.view
+            .display_render()
+            .expect("Failed to print render to screen");
     }
 
     fn sleep_and_get_input_data(
