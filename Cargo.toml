@@ -10,3 +10,17 @@ crossterm = "0.27.0"
 gemini-engine = "0.11.3"
 console-input = "0.1.1"
 rand = "0.8.5"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[lints.clippy]
+enum_glob_use = "warn"
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"
+
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
+cast_sign_loss = "allow"
+cast_possible_wrap = "allow"
