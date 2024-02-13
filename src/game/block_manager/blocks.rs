@@ -109,10 +109,11 @@ impl ViewElement for Block {
             self.shape.get_colour()
         };
 
-        let block_points: Vec<Vec2D> = rotation_states[self.rotation.rem_euclid(rotation_states.len())]
-            .iter()
-            .map(|p| *p + self.pos)
-            .collect();
+        let block_points: Vec<Vec2D> = rotation_states
+            [self.rotation.rem_euclid(rotation_states.len())]
+        .iter()
+        .map(|p| *p + self.pos)
+        .collect();
 
         utils::points_to_pixels(&block_points, block_colour)
     }
