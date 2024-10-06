@@ -9,7 +9,7 @@ pub(super) struct BlockData {
     pub wall_kick_data: HashMap<(usize, usize), Vec<Vec2D>>,
 }
 impl BlockData {
-    fn new(
+    const fn new(
         rotation_states: Vec<Vec<Vec2D>>,
         colour: Colour,
         wall_kick_data: HashMap<(usize, usize), Vec<Vec2D>>,
